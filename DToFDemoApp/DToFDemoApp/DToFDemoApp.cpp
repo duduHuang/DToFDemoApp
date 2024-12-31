@@ -1,228 +1,180 @@
-﻿
-// DToFDemoApp.cpp: 定義應用程式的類別表現方式。
+﻿// DToFDemoApp.cpp : 定義應用程式的進入點。
 //
 
-#include "pch.h"
 #include "framework.h"
-#include "afxwinappex.h"
-#include "afxdialogex.h"
 #include "DToFDemoApp.h"
-#include "MainFrm.h"
 
-#include "ChildFrm.h"
-#include "DToFDemoAppDoc.h"
-#include "DToFDemoAppView.h"
+#define MAX_LOADSTRING 100
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#endif
+// 全域變數:
+HINSTANCE hInst;                                // 目前執行個體
+WCHAR szTitle[MAX_LOADSTRING];                  // 標題列文字
+WCHAR szWindowClass[MAX_LOADSTRING];            // 主視窗類別名稱
 
+// 這個程式碼模組所包含之函式的向前宣告:
+ATOM                MyRegisterClass(HINSTANCE hInstance);
+BOOL                InitInstance(HINSTANCE, int);
+LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
-// CDToFDemoAppApp
-
-BEGIN_MESSAGE_MAP(CDToFDemoAppApp, CWinAppEx)
-	ON_COMMAND(ID_APP_ABOUT, &CDToFDemoAppApp::OnAppAbout)
-	// 依據文件命令的標準檔案
-	ON_COMMAND(ID_FILE_NEW, &CWinAppEx::OnFileNew)
-	ON_COMMAND(ID_FILE_OPEN, &CWinAppEx::OnFileOpen)
-	// 標準列印設定命令
-	ON_COMMAND(ID_FILE_PRINT_SETUP, &CWinAppEx::OnFilePrintSetup)
-END_MESSAGE_MAP()
-
-
-// CDToFDemoAppApp 建構
-
-CDToFDemoAppApp::CDToFDemoAppApp() noexcept
+int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
+                     _In_opt_ HINSTANCE hPrevInstance,
+                     _In_ LPWSTR    lpCmdLine,
+                     _In_ int       nCmdShow)
 {
-	m_bHiColorIcons = TRUE;
+    UNREFERENCED_PARAMETER(hPrevInstance);
+    UNREFERENCED_PARAMETER(lpCmdLine);
 
+    // TODO: 在此放置程式碼。
 
-	m_nAppLook = 0;
-	// 支援重新啟動管理員
-	m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_ALL_ASPECTS;
-#ifdef _MANAGED
-	// 如果應用程式是使用 Common Language Runtime 支援 (/clr) 建置的: 
-	//     1) 要使重新啟動管理員支援正常運作需要這個額外設定。
-	//     2) 在專案中必須將參考加入至 System.Windows.Forms 才能進行建置。
-	System::Windows::Forms::Application::SetUnhandledExceptionMode(System::Windows::Forms::UnhandledExceptionMode::ThrowException);
-#endif
+    // 將全域字串初始化
+    LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDC_DTOFDEMOAPP, szWindowClass, MAX_LOADSTRING);
+    MyRegisterClass(hInstance);
 
-	// TODO: 以唯一的 ID 字串取代下面的應用程式 ID 字串; 建議的
-	// 字串格式為 CompanyName.ProductName.SubProduct.VersionInformation
-	SetAppID(_T("DToFDemoApp.AppID.NoVersion"));
+    // 執行應用程式初始化:
+    if (!InitInstance (hInstance, nCmdShow))
+    {
+        return FALSE;
+    }
 
-	// TODO:  在此加入建構程式碼，
-	// 將所有重要的初始設定加入 InitInstance 中
+    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_DTOFDEMOAPP));
+
+    MSG msg;
+
+    // 主訊息迴圈:
+    while (GetMessage(&msg, nullptr, 0, 0))
+    {
+        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
+
+    return (int) msg.wParam;
 }
 
-// 唯一一個 CDToFDemoAppApp 物件
-
-CDToFDemoAppApp theApp;
 
 
-// CDToFDemoAppApp 初始化
-
-BOOL CDToFDemoAppApp::InitInstance()
+//
+//  函式: MyRegisterClass()
+//
+//  用途: 註冊視窗類別。
+//
+ATOM MyRegisterClass(HINSTANCE hInstance)
 {
-	// 假如應用程式資訊清單指定使用 ComCtl32.dll 6 (含) 以後版本，
-	// 來啟動視覺化樣式，在 Windows XP 上，則需要 InitCommonControls()。
-	// 否則任何視窗的建立都將失敗。
-	INITCOMMONCONTROLSEX InitCtrls;
-	InitCtrls.dwSize = sizeof(InitCtrls);
-	// 設定要包含所有您想要用於應用程式中的
-	// 通用控制項類別。
-	InitCtrls.dwICC = ICC_WIN95_CLASSES;
-	InitCommonControlsEx(&InitCtrls);
+    WNDCLASSEXW wcex;
 
-	CWinAppEx::InitInstance();
+    wcex.cbSize = sizeof(WNDCLASSEX);
 
+    wcex.style          = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc    = WndProc;
+    wcex.cbClsExtra     = 0;
+    wcex.cbWndExtra     = 0;
+    wcex.hInstance      = hInstance;
+    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_DTOFDEMOAPP));
+    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
+    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
+    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_DTOFDEMOAPP);
+    wcex.lpszClassName  = szWindowClass;
+    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
-	// 初始化 OLE 程式庫
-	if (!AfxOleInit())
-	{
-		AfxMessageBox(IDP_OLE_INIT_FAILED);
-		return FALSE;
-	}
-
-	AfxEnableControlContainer();
-
-	EnableTaskbarInteraction();
-
-	// 需要有 AfxInitRichEdit2() 才能使用 RichEdit 控制項
-	// AfxInitRichEdit2();
-
-	// 標準初始設定
-	// 如果您不使用這些功能並且想減少
-	// 最後完成的可執行檔大小，您可以
-	// 從下列程式碼移除不需要的初始化常式，
-	// 變更儲存設定值的登錄機碼
-	// TODO: 您應該適度修改此字串
-	// (例如，公司名稱或組織名稱)
-	SetRegistryKey(_T("本機 AppWizard 所產生的應用程式"));
-	LoadStdProfileSettings(4);  // 載入標準 INI 檔選項 (包含 MRU)
-
-
-	InitContextMenuManager();
-
-	InitKeyboardManager();
-
-	InitTooltipManager();
-	CMFCToolTipInfo ttParams;
-	ttParams.m_bVislManagerTheme = TRUE;
-	theApp.GetTooltipManager()->SetTooltipParams(AFX_TOOLTIP_TYPE_ALL,
-		RUNTIME_CLASS(CMFCToolTipCtrl), &ttParams);
-
-	// 登錄應用程式的文件範本。文件範本負責在文件、
-	// 框架視窗與檢視間進行連接
-	CMultiDocTemplate* pDocTemplate;
-	pDocTemplate = new CMultiDocTemplate(IDR_DToFDemoAppTYPE,
-		RUNTIME_CLASS(CDToFDemoAppDoc),
-		RUNTIME_CLASS(CChildFrame), // 自訂 MDI 子框架
-		RUNTIME_CLASS(CDToFDemoAppView));
-	if (!pDocTemplate)
-		return FALSE;
-	AddDocTemplate(pDocTemplate);
-
-	// 建立主 MDI 框架視窗
-	CMainFrame* pMainFrame = new CMainFrame;
-	if (!pMainFrame || !pMainFrame->LoadFrame(IDR_MAINFRAME))
-	{
-		delete pMainFrame;
-		return FALSE;
-	}
-	m_pMainWnd = pMainFrame;
-
-
-	// 剖析標準 Shell 命令、DDE、檔案開啟舊檔的命令列
-	CCommandLineInfo cmdInfo;
-	ParseCommandLine(cmdInfo);
-
-
-
-	// 在命令列中指定的分派命令。如果已使用 
-	// /RegServer、/Register、/Unregserver 或 /Unregister 啟動應用程式，將傳回 FALSE。
-	if (!ProcessShellCommand(cmdInfo))
-		return FALSE;
-	// 已經初始設定主視窗，所以顯示並更新該視窗
-	pMainFrame->ShowWindow(m_nCmdShow);
-	pMainFrame->UpdateWindow();
-
-	return TRUE;
+    return RegisterClassExW(&wcex);
 }
 
-int CDToFDemoAppApp::ExitInstance()
+//
+//   函式: InitInstance(HINSTANCE, int)
+//
+//   用途: 儲存執行個體控制代碼並且建立主視窗
+//
+//   註解:
+//
+//        在這個函式中，我們將執行個體控制代碼儲存在全域變數中，
+//        並建立及顯示主程式視窗。
+//
+BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-	// TODO: 處理其他您已經加入的資源
-	AfxOleTerm(FALSE);
+   hInst = hInstance; // 將執行個體控制代碼儲存在全域變數中
 
-	return CWinAppEx::ExitInstance();
+   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+
+   if (!hWnd)
+   {
+      return FALSE;
+   }
+
+   ShowWindow(hWnd, nCmdShow);
+   UpdateWindow(hWnd);
+
+   return TRUE;
 }
 
-// CDToFDemoAppApp 訊息處理常式
-
-
-// 對 App About 使用 CAboutDlg 對話方塊
-
-class CAboutDlg : public CDialogEx
+//
+//  函式: WndProc(HWND, UINT, WPARAM, LPARAM)
+//
+//  用途: 處理主視窗的訊息。
+//
+//  WM_COMMAND  - 處理應用程式功能表
+//  WM_PAINT    - 繪製主視窗
+//  WM_DESTROY  - 張貼結束訊息然後傳回
+//
+//
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-public:
-	CAboutDlg() noexcept;
-
-// 對話方塊資料
-#ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_ABOUTBOX };
-#endif
-
-protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
-
-// 程式碼實作
-protected:
-	DECLARE_MESSAGE_MAP()
-};
-
-CAboutDlg::CAboutDlg() noexcept : CDialogEx(IDD_ABOUTBOX)
-{
+    switch (message)
+    {
+    case WM_COMMAND:
+        {
+            int wmId = LOWORD(wParam);
+            // 剖析功能表選取項目:
+            switch (wmId)
+            {
+            case IDM_ABOUT:
+                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+                break;
+            case IDM_EXIT:
+                DestroyWindow(hWnd);
+                break;
+            default:
+                return DefWindowProc(hWnd, message, wParam, lParam);
+            }
+        }
+        break;
+    case WM_PAINT:
+        {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hWnd, &ps);
+            // TODO: 在此新增任何使用 hdc 的繪圖程式碼...
+            EndPaint(hWnd, &ps);
+        }
+        break;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        break;
+    default:
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+    return 0;
 }
 
-void CAboutDlg::DoDataExchange(CDataExchange* pDX)
+// [關於] 方塊的訊息處理常式。
+INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	CDialogEx::DoDataExchange(pDX);
+    UNREFERENCED_PARAMETER(lParam);
+    switch (message)
+    {
+    case WM_INITDIALOG:
+        return (INT_PTR)TRUE;
+
+    case WM_COMMAND:
+        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+        {
+            EndDialog(hDlg, LOWORD(wParam));
+            return (INT_PTR)TRUE;
+        }
+        break;
+    }
+    return (INT_PTR)FALSE;
 }
-
-BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
-END_MESSAGE_MAP()
-
-// 執行對話方塊的應用程式命令
-void CDToFDemoAppApp::OnAppAbout()
-{
-	CAboutDlg aboutDlg;
-	aboutDlg.DoModal();
-}
-
-// CDToFDemoAppApp 自訂載入/儲存方法
-
-void CDToFDemoAppApp::PreLoadState()
-{
-	BOOL bNameValid;
-	CString strName;
-	bNameValid = strName.LoadString(IDS_EDIT_MENU);
-	ASSERT(bNameValid);
-	GetContextMenuManager()->AddMenu(strName, IDR_POPUP_EDIT);
-	bNameValid = strName.LoadString(IDS_EXPLORER);
-	ASSERT(bNameValid);
-	GetContextMenuManager()->AddMenu(strName, IDR_POPUP_EXPLORER);
-}
-
-void CDToFDemoAppApp::LoadCustomState()
-{
-}
-
-void CDToFDemoAppApp::SaveCustomState()
-{
-}
-
-// CDToFDemoAppApp 訊息處理常式
-
-
-

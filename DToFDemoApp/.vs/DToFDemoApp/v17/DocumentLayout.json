@@ -1,7 +1,12 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\tedhuang\\source\\repos\\DToFDemoApp\\",
-  "Documents": [],
+  "WorkspaceRootPath": "C:\\Users\\tedhuang\\Documents\\CypressCX3\\DToFDemoApp\\DToFDemoApp\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{2ED8B904-1102-4310-BBCE-D875CB34C5DB}|DToFDemoApp\\DToFDemoApp.vcxproj|C:\\Users\\tedhuang\\Documents\\CypressCX3\\DToFDemoApp\\DToFDemoApp\\DToFDemoApp\\DToFDemoApp.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{2ED8B904-1102-4310-BBCE-D875CB34C5DB}|DToFDemoApp\\DToFDemoApp.vcxproj|solutionrelative:DToFDemoApp\\DToFDemoApp.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
@@ -9,8 +14,21 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": -1,
+          "SelectedChildIndex": 0,
           "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "DToFDemoApp.cpp",
+              "DocumentMoniker": "C:\\Users\\tedhuang\\Documents\\CypressCX3\\DToFDemoApp\\DToFDemoApp\\DToFDemoApp\\DToFDemoApp.cpp",
+              "RelativeDocumentMoniker": "DToFDemoApp\\DToFDemoApp.cpp",
+              "ToolTip": "C:\\Users\\tedhuang\\Documents\\CypressCX3\\DToFDemoApp\\DToFDemoApp\\DToFDemoApp\\DToFDemoApp.cpp",
+              "RelativeToolTip": "DToFDemoApp\\DToFDemoApp.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-12-31T02:56:43.645Z",
+              "EditorCaption": ""
+            },
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
