@@ -15,6 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DToFDemoApp.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="DToFDemoAppDlg.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
     <ClInclude Include="framework.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
@@ -24,12 +30,18 @@
     <ClInclude Include="Resource.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
-    <ClInclude Include="DToFDemoApp.h">
+    <ClInclude Include="pch.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DToFDemoApp.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
+    <ClCompile Include="DToFDemoAppDlg.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
   </ItemGroup>
@@ -39,10 +51,12 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="small.ico">
+    <None Include="res\DToFDemoApp.rc2">
       <Filter>資源檔</Filter>
-    </Image>
-    <Image Include="DToFDemoApp.ico">
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\DToFDemoApp.ico">
       <Filter>資源檔</Filter>
     </Image>
   </ItemGroup>

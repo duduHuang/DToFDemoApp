@@ -3,8 +3,8 @@
   "WorkspaceRootPath": "C:\\Users\\tedhuang\\Documents\\CypressCX3\\DToFDemoApp\\DToFDemoApp\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{2ED8B904-1102-4310-BBCE-D875CB34C5DB}|DToFDemoApp\\DToFDemoApp.vcxproj|C:\\Users\\tedhuang\\Documents\\CypressCX3\\DToFDemoApp\\DToFDemoApp\\DToFDemoApp\\DToFDemoApp.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{2ED8B904-1102-4310-BBCE-D875CB34C5DB}|DToFDemoApp\\DToFDemoApp.vcxproj|solutionrelative:DToFDemoApp\\DToFDemoApp.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{8E5740EC-CF39-4903-BB8A-42537C0A648F}|DToFDemoApp\\DToFDemoApp.vcxproj|C:\\Users\\tedhuang\\Documents\\CypressCX3\\DToFDemoApp\\DToFDemoApp\\DToFDemoApp\\DToFDemoApp.rc||{177559E0-D141-11D0-92DF-00A0C9138C45}|,   b e g i n       % \u0086 $$  \u0022     ",
+      "RelativeMoniker": "D:0:0:{8E5740EC-CF39-4903-BB8A-42537C0A648F}|DToFDemoApp\\DToFDemoApp.vcxproj|solutionrelative:DToFDemoApp\\DToFDemoApp.rc||{177559E0-D141-11D0-92DF-00A0C9138C45}|,   b e g i n       % \u0086 $$  \u0022     "
     }
   ],
   "DocumentGroupContainers": [
@@ -19,15 +19,14 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "DToFDemoApp.cpp",
-              "DocumentMoniker": "C:\\Users\\tedhuang\\Documents\\CypressCX3\\DToFDemoApp\\DToFDemoApp\\DToFDemoApp\\DToFDemoApp.cpp",
-              "RelativeDocumentMoniker": "DToFDemoApp\\DToFDemoApp.cpp",
-              "ToolTip": "C:\\Users\\tedhuang\\Documents\\CypressCX3\\DToFDemoApp\\DToFDemoApp\\DToFDemoApp\\DToFDemoApp.cpp",
-              "RelativeToolTip": "DToFDemoApp\\DToFDemoApp.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2024-12-31T02:56:43.645Z",
-              "EditorCaption": ""
+              "Title": "DToFDemoApp.rc - IDD_DTOFDEMOAPP_DIALOG - Dialog",
+              "DocumentMoniker": "C:\\Users\\tedhuang\\Documents\\CypressCX3\\DToFDemoApp\\DToFDemoApp\\DToFDemoApp\\DToFDemoApp.rc",
+              "RelativeDocumentMoniker": "DToFDemoApp\\DToFDemoApp.rc",
+              "ToolTip": "C:\\Users\\tedhuang\\Documents\\CypressCX3\\DToFDemoApp\\DToFDemoApp\\DToFDemoApp\\DToFDemoApp.rc - IDD_DTOFDEMOAPP_DIALOG - Dialog",
+              "RelativeToolTip": "DToFDemoApp\\DToFDemoApp.rc - IDD_DTOFDEMOAPP_DIALOG - Dialog",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001005|",
+              "WhenOpened": "2024-12-31T03:31:16.213Z",
+              "EditorCaption": " - IDD_DTOFDEMOAPP_DIALOG - Dialog"
             },
             {
               "$type": "Bookmark",
