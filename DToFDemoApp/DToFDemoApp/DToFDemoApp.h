@@ -19,6 +19,7 @@ class CDToFDemoAppApp : public CWinApp
 {
 public:
 	CDToFDemoAppApp();
+	HANDLE mutexhandle;
 
 // 覆寫
 public:

@@ -1,0 +1,37 @@
+Package: mathgl
+Version: 8.0.1
+Port-Version: 5
+Depends: getopt, mathgl, vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 7695fcc5c7e2de2eefafe479d703f0ee6769701e0d68db1cb876e5aa97019b77
+Description: MathGL is a free library of fast C++ routines for the plotting of the data varied in one or more dimensions
+Default-Features: jpeg, opengl, png, zlib
+
+Package: mathgl
+Feature: jpeg
+Depends: libjpeg-turbo
+Architecture: x64-windows
+Multi-Arch: same
+Description: jpeg module
+
+Package: mathgl
+Feature: opengl
+Depends: opengl
+Architecture: x64-windows
+Multi-Arch: same
+Description: opengl module
+
+Package: mathgl
+Feature: png
+Depends: libpng, mathgl
+Architecture: x64-windows
+Multi-Arch: same
+Description: png module
+
+Package: mathgl
+Feature: zlib
+Depends: zlib
+Architecture: x64-windows
+Multi-Arch: same
+Description: zlib module

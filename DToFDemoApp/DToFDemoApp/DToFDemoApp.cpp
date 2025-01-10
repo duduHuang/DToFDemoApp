@@ -52,6 +52,10 @@ BOOL CDToFDemoAppApp::InitInstance()
 
 	CWinApp::InitInstance();
 
+	mutexhandle = CreateMutex(NULL, TRUE, _T("D10F5CDB-2757-4E82-B219-BF53639A7D87"));
+	if (GetLastError() == ERROR_ALREADY_EXISTS)
+		exit(0);
+
 	if (!AfxSocketInit())
 	{
 		AfxMessageBox(IDP_SOCKETS_INIT_FAILED);
@@ -80,14 +84,14 @@ BOOL CDToFDemoAppApp::InitInstance()
 	CDToFDemoAppDlg dlg;
 	m_pMainWnd = &dlg;
 	INT_PTR nResponse = dlg.DoModal();
-	if (nResponse == IDOK)
+	if (nResponse == IDC_PREBTN)
 	{
-		// TODO: 在此放置於使用 [確定] 來停止使用對話方塊時
+		// TODO: 在此放置於使用 [Preview] 來停止使用對話方塊時
 		// 處理的程式碼
 	}
 	else if (nResponse == IDCANCEL)
 	{
-		// TODO: 在此放置於使用 [取消] 來停止使用對話方塊時
+		// TODO: 在此放置於使用 [Cancel] 來停止使用對話方塊時
 		// 處理的程式碼
 	}
 	else if (nResponse == -1)

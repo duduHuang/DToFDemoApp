@@ -33,6 +33,12 @@
     <ClInclude Include="pch.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
+    <ClInclude Include="DirectShowCamera.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="qedit.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DToFDemoApp.cpp">
@@ -42,6 +48,9 @@
       <Filter>來源檔案</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectShowCamera.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
   </ItemGroup>
@@ -57,6 +66,9 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\DToFDemoApp.ico">
+      <Filter>資源檔</Filter>
+    </Image>
+    <Image Include="res\icon1.ico">
       <Filter>資源檔</Filter>
     </Image>
   </ItemGroup>
