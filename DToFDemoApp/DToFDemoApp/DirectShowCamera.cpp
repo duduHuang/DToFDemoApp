@@ -54,8 +54,6 @@ void MySampleGrabberCallback::setFileCount(int count) {
 UINT ShowWindowRealTimeImage(LPVOID pParam) {
 	DirectShowCamera* pThis = static_cast<DirectShowCamera*>(pParam);
 	pThis->ShowCameraData();
-
-	delete pThis;
 	return 0;
 }
 
@@ -92,7 +90,7 @@ UINT WriteFileProcess(LPVOID pParam) {
 		}
 		std::cout << "write camera data...\n";
 	}
-
+	AfxMessageBox(_T("Finish..."));
 	delete params;
 	return 0;
 }
@@ -528,7 +526,6 @@ void DirectShowCamera::ShowCameraData() {
 			RBSubView();
 			grabberCallback.setIsNotFull();
 			std::cout << "show camera...\n";
-			//outFile << "show camera...\n";
 		}
 	}
 }
