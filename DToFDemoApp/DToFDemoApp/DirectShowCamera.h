@@ -27,9 +27,19 @@
 #define HISTO_NUMBER 144
 #define RANGING_MODE_WIDTH 672
 #define RANGING_MODE_HEIGHT 600
+#define INDEX_START_X 92
+#define INDEX_START_Y 644
+
+struct WriteFileThreadParams {
+	int fileCount;
+	CString filePath;
+};
 
 class MySampleGrabberCallback : public ISampleGrabberCB {
 private:
+	unsigned char** gCameraData;
+	bool isFull = false;
+	int fileCount = 0;
 	ULONG refCount;
 public:
 	STDMETHODIMP SampleCB(double SampleTime, IMediaSample* pSample) override;
@@ -59,6 +69,12 @@ public:
 		}
 		return count;
 	};
+
+	void setBuffer(unsigned char** buffer);
+	void setQueueBuffer(std::queue<std::vector<BYTE>>* queueBuffer);
+	void setIsNotFull();
+	bool getIsFull();
+	void setFileCount(int count);
 };
 
 class DirectShowCamera {
@@ -72,13 +88,16 @@ public:
 	void prepareCamera();
 	void run();
 	void stop();
+	POINT* getPoints();
 	void ShowCameraData();
 	void LTSubView();
 	void RTSubView();
 	void LBSubView();
 	void RBSubView();
+	void setHistIndex(const int hist, const int width, const int height);
+	void setRotate(const int x, const int y, const int width, const int height);
 	void Cloud3D(int width, int height, uchar* pic, int rx, int ry);
-	void Histgram(int width, int height, uchar* pic, const int histindex);
+	void Histgram(int width, int height, uchar* pic, const int histIndex);
 	void Cloud2D(int width, int height, uchar* pic);
 	void Filter2D(int width, int height, uchar* pic, int low_threadhold, int hightthreadhold);
 
@@ -87,17 +106,17 @@ public:
 	void fullframe_process(int rowIndex, int* ppickz);
 	void ParseOneLine();
 
-	void writeFile(const char* filePath, const unsigned char* data, const int fileCount);
+	void writeFile(const int fileCount);
 
-	bool isPreview;
+	volatile bool isPreview;
 
 private:
-	void subView(CDC* pDC, uchar* data);
+	void subView(CDC* pDC, uchar* data, int width, int height);
 
 	HRESULT hr;
 	int subViewWidth, subViewHeight;
-	CDC* pLTDC, *pRTDC, *pLBDC, *pRBDC;
-	CWinThread* m_pThread;
+	CDC* pLTDC, * pRTDC, * pLBDC, * pRBDC;
+	CWinThread* m_pThread, * m_writeFileThread;
 	CComPtr<ICreateDevEnum> pDevEnum;
 	CComPtr<IEnumMoniker> pEnum;
 	CComPtr<IGraphBuilder> pGraph;
@@ -119,10 +138,7 @@ private:
 	POINT* histpoints;
 	HCURSOR defaultcursor;
 	mglData x, y, z;
-	int rotatx = 40, rotaty = 50;
-	int histindex = -1;
-	// 宣告旗標變數，用於通知執行緒停止
-	volatile bool m_bThreadStop = false;  // 加上 volatile，確保多執行緒存取時正確性
+	int rotatx = 40, rotaty = 50, histIndex = -1, histW = 0, histH = 0, cloud3dW = 0, cloud3dH = 0;
 };
 
 #endif // !__H_DIRECTSHOWCAMERA__

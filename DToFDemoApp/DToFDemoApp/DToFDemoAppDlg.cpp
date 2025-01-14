@@ -59,7 +59,8 @@ CDToFDemoAppDlg::CDToFDemoAppDlg(CWnd* pParent /*=nullptr*/)
 void CDToFDemoAppDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_PIC, picView);
+	DDX_Control(pDX, IDC_PIC, m_picView);
+	DDX_Control(pDX, IDC_EDIT1, m_editControl);
 }
 
 BEGIN_MESSAGE_MAP(CDToFDemoAppDlg, CDialogEx)
@@ -68,6 +69,7 @@ BEGIN_MESSAGE_MAP(CDToFDemoAppDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_PREBTN, &CDToFDemoAppDlg::OnBnClickedPreview)
 	ON_BN_CLICKED(IDCANCEL, &CDToFDemoAppDlg::OnBnClickedCancel)
+	ON_BN_CLICKED(IDC_EDITBTN, &CDToFDemoAppDlg::OnBnClickedButtonSetText)
 
 	ON_WM_MOUSEMOVE()
 	ON_WM_SETCURSOR()
@@ -113,6 +115,18 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	directShowCamera = new DirectShowCamera();
 
 	GetDlgItem(IDC_PIC)->SetWindowPos(GetParent(), 10, 10, 1280, 720, SWP_SHOWWINDOW);
+
+	pLTSubView.top = 0;
+	pLTSubView.left = 0;
+	pLTSubView.bottom = 360;
+	pLTSubView.right = 640;
+
+	pRTSubView.top = 321;
+	pRTSubView.left = 0;
+	pRTSubView.bottom = 720;
+	pRTSubView.right = 640;
+
+	defaultCursor = GetCursor();
 
 	return TRUE;  // 傳回 TRUE，除非您對控制項設定焦點
 }
@@ -203,7 +217,21 @@ void CDToFDemoAppDlg::OnBnClickedPreview() {
 
 void CDToFDemoAppDlg::OnBnClickedCancel() {
 	directShowCamera->stop();
-	CDialogEx::OnCancel();
+	PostQuitMessage(0); // 發送 WM_QUIT
+}
+
+void CDToFDemoAppDlg::OnBnClickedButtonSetText() {
+	CString inputText;
+	m_editControl.GetWindowTextW(inputText);
+	if (!inputText.IsEmpty()) {
+		int number = _ttoi(inputText);
+		if (0 != number) {
+			directShowCamera->writeFile(number);
+		}
+		else {
+			directShowCamera->writeFile(defaultFileCount);
+		}
+	}
 }
 
 BOOL CDToFDemoAppDlg::TrayMessage(DWORD dwMessage) {
@@ -226,20 +254,82 @@ void CDToFDemoAppDlg::OnTimer(UINT_PTR nIDEvent) {
 }
 
 void CDToFDemoAppDlg::OnMouseMove(UINT nFlags, CPoint point) {
+	POINT pt;
+	GetCursorPos(&pt);
+	::ScreenToClient(this->m_hWnd, &pt);
+
+	if (cursorLTFlag && pt.x >= pLTSubView.left && pt.x <= pLTSubView.right && pt.y >= pLTSubView.top && pt.y <= pLTSubView.bottom) {
+		if (point.x > startX)
+			rotatX += 5;
+		else if (point.x < startX)
+			rotatX -= 5;
+
+		if (point.y > startY)
+			rotatY += 5;
+		else if (point.y < startY)
+			rotatY -= 5;
+
+		startX = point.x;
+		startY = point.y;
+
+		RECT m_rect;
+		GetDlgItem(IDC_PIC)->GetWindowRect(&m_rect);
+		directShowCamera->setRotate(rotatX, rotatY, m_rect.right - m_rect.left, m_rect.bottom - m_rect.top);
+	}
+	else if (pt.x >= pRTSubView.left && pt.x <= pRTSubView.right && pt.y >= pRTSubView.top && pt.y <= pRTSubView.bottom) {
+		if (GetCursor() != AfxGetApp()->LoadStandardCursor(IDC_CROSS)) {
+			defaultCursor = SetCursor(AfxGetApp()->LoadStandardCursor(IDC_CROSS));
+			cursorRTFlag = true;
+		}
+	}
+	else {
+		if (GetCursor() != defaultCursor)
+			SetCursor(defaultCursor);
+
+		cursorRTFlag = false;
+	}
+
 	CDialogEx::OnMouseMove(nFlags, point);
 }
 
 BOOL CDToFDemoAppDlg::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message) {
-	return CDialogEx::OnSetCursor(pWnd, nHitTest, message);
+	if (cursorLTFlag)
+		return TRUE;
+	else if (cursorRTFlag)
+		return TRUE;
+	else
+		return CDialogEx::OnSetCursor(pWnd, nHitTest, message);
 }
 
 void CDToFDemoAppDlg::OnLButtonDown(UINT nFlags, CPoint point) {
-	CDialogEx::OnLButtonDown(nFlags, point);
+	POINT pt;
+	GetCursorPos(&pt);
+	::ScreenToClient(this->m_hWnd, &pt);
+
+	if (pt.x >= pLTSubView.left && pt.x <= pLTSubView.right && pt.y >= pLTSubView.top && pt.y <= pLTSubView.bottom) {
+		defaultCursor = SetCursor(AfxGetApp()->LoadStandardCursor(IDC_HAND));
+		cursorLTFlag = true;
+		startX = point.x;
+		startY = point.y;
+	}
+	else if (cursorRTFlag && pt.x >= pRTSubView.left && pt.x <= pRTSubView.right && pt.y >= pRTSubView.top && pt.y <= pRTSubView.bottom) {
+		int index = -1;
+		POINT* histpoints = directShowCamera->getPoints();
+		index = Get2DPos(pt, histpoints);
+		RECT m_rect;
+		GetDlgItem(IDC_PIC1)->GetWindowRect(&m_rect);
+		directShowCamera->setHistIndex(index, m_rect.right - m_rect.left, m_rect.bottom - m_rect.top);
+	}
+	else {
+		SendMessage(WM_SYSCOMMAND, SC_MOVE | HTCAPTION);
+	}
+
+	//CDialogEx::OnLButtonDown(nFlags, point);
 }
 
 void CDToFDemoAppDlg::OnLButtonUp(UINT nFlags, CPoint point) {
-	//SetCursor(defaultcursor);
-	//cursorflag = false;
+	SetCursor(defaultCursor);
+	cursorLTFlag = false;
 	CDialogEx::OnLButtonUp(nFlags, point);
 }
 
@@ -276,159 +366,34 @@ void CDToFDemoAppDlg::DisplaySubView() {
 		SWP_SHOWWINDOW);
 }
 
-void CDToFDemoAppDlg::LTSubView() {
-	CRect dcrect(0, 0, subViewWidth, subViewHeight);
-	CDC memDC;
-	CDC* pDC = GetDlgItem(IDC_PIC)->GetDC();
-	memDC.CreateCompatibleDC(pDC);
+bool CheckInRect(POINT srcpt, POINT limitpt) {
+	int lx, ty;
+	if ((limitpt.x - 5) < 0)
+		lx = 0;
+	else
+		lx = limitpt.x - 5;
 
-	CBitmap Membitmap;
-	Membitmap.CreateCompatibleBitmap(pDC, dcrect.Width(), dcrect.Height());
-	CBitmap* pBmpOld = memDC.SelectObject(&Membitmap);
+	if ((limitpt.y - 5) < 0)
+		ty = 0;
+	else
+		ty = limitpt.y - 5;
 
-	cv::Mat pic(subViewWidth, subViewHeight, CV_8UC3);
-	directShowCamera->Cloud3D(subViewWidth, subViewHeight, pic.data, rotatx, rotaty);
+	if (srcpt.x >= lx && srcpt.x <= limitpt.x + 5) {
+		if (srcpt.y >= ty && srcpt.y <= limitpt.y + 5) {
+			return true;
+		}
+	}
 
-	BITMAPINFO bitInfo;
-	bitInfo.bmiHeader.biBitCount = SPOT_NUMBER;
-	bitInfo.bmiHeader.biWidth = subViewWidth;
-	bitInfo.bmiHeader.biHeight = subViewHeight;
-	bitInfo.bmiHeader.biPlanes = 1;
-	bitInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bitInfo.bmiHeader.biCompression = BI_RGB;
-	bitInfo.bmiHeader.biClrImportant = 0;
-	bitInfo.bmiHeader.biClrUsed = 0;
-	bitInfo.bmiHeader.biSizeImage = 0;
-	bitInfo.bmiHeader.biXPelsPerMeter = 0;
-	bitInfo.bmiHeader.biYPelsPerMeter = 0;
-
-	::StretchDIBits(memDC.GetSafeHdc(), 0, 0,
-		subViewWidth, subViewHeight, 0, 0,
-		subViewWidth, subViewHeight,
-		pic.data, &bitInfo, DIB_RGB_COLORS, SRCCOPY
-	);
-
-	pDC->BitBlt(dcrect.left, dcrect.top, dcrect.Width(), dcrect.Height(), &memDC, 0, 0, SRCCOPY);
-	memDC.SelectObject(pBmpOld);
-
-	Membitmap.DeleteObject();
-	memDC.DeleteDC();
-	GetDlgItem(IDC_PIC)->ReleaseDC(pDC);
+	return false;
 }
 
-void CDToFDemoAppDlg::RTSubView() {
-	CRect dcrect(0, 0, subViewWidth, subViewHeight);
-	CDC memDC;
-	CDC* pDC = GetDlgItem(IDC_PIC1)->GetDC();
-	memDC.CreateCompatibleDC(pDC);
-	CBitmap Membitmap;
-	Membitmap.CreateCompatibleBitmap(pDC, dcrect.Width(), dcrect.Height());
-	CBitmap* pBmpOld = memDC.SelectObject(&Membitmap);
-	cv::Mat pic(subViewWidth, subViewHeight, CV_8UC3);
-
-	directShowCamera->Histgram(subViewWidth, subViewHeight, pic.data, -1);
-
-	BITMAPINFO bitInfo;
-	bitInfo.bmiHeader.biBitCount = SPOT_NUMBER;
-	bitInfo.bmiHeader.biWidth = subViewWidth;
-	bitInfo.bmiHeader.biHeight = subViewHeight;
-	bitInfo.bmiHeader.biPlanes = 1;
-	bitInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bitInfo.bmiHeader.biCompression = BI_RGB;
-	bitInfo.bmiHeader.biClrImportant = 0;
-	bitInfo.bmiHeader.biClrUsed = 0;
-	bitInfo.bmiHeader.biSizeImage = 0;
-	bitInfo.bmiHeader.biXPelsPerMeter = 0;
-	bitInfo.bmiHeader.biYPelsPerMeter = 0;
-
-	::StretchDIBits(memDC.GetSafeHdc(), 0, 0,
-		subViewWidth, subViewHeight, 0, 0,
-		subViewWidth, subViewHeight,
-		pic.data, &bitInfo, DIB_RGB_COLORS, SRCCOPY
-	);
-
-	pDC->BitBlt(dcrect.left, dcrect.top, dcrect.Width(), dcrect.Height(), &memDC, 0, 0, SRCCOPY);
-	memDC.SelectObject(pBmpOld);
-
-	Membitmap.DeleteObject();
-	memDC.DeleteDC();
-	GetDlgItem(IDC_PIC1)->ReleaseDC(pDC);
-}
-
-void CDToFDemoAppDlg::LBSubView() {
-	CRect dcrect(0, 0, subViewWidth, subViewHeight);
-	CDC memDC;
-	CDC* pDC = GetDlgItem(IDC_PIC2)->GetDC();
-	memDC.CreateCompatibleDC(pDC);
-	CBitmap Membitmap;
-	Membitmap.CreateCompatibleBitmap(pDC, dcrect.Width(), dcrect.Height());
-	CBitmap* pBmpOld = memDC.SelectObject(&Membitmap);
-	cv::Mat pic(subViewWidth, subViewHeight, CV_8UC3);
-
-	directShowCamera->Cloud2D(subViewWidth, subViewHeight, pic.data);
-
-	BITMAPINFO bitInfo;
-	bitInfo.bmiHeader.biBitCount = SPOT_NUMBER;
-	bitInfo.bmiHeader.biWidth = subViewWidth;
-	bitInfo.bmiHeader.biHeight = subViewHeight;
-	bitInfo.bmiHeader.biPlanes = 1;
-	bitInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bitInfo.bmiHeader.biCompression = BI_RGB;
-	bitInfo.bmiHeader.biClrImportant = 0;
-	bitInfo.bmiHeader.biClrUsed = 0;
-	bitInfo.bmiHeader.biSizeImage = 0;
-	bitInfo.bmiHeader.biXPelsPerMeter = 0;
-	bitInfo.bmiHeader.biYPelsPerMeter = 0;
-
-	::StretchDIBits(memDC.GetSafeHdc(), 0, 0,
-		subViewWidth, subViewHeight, 0, 0,
-		subViewWidth, subViewHeight,
-		pic.data, &bitInfo, DIB_RGB_COLORS, SRCCOPY
-	);
-
-	pDC->BitBlt(dcrect.left, dcrect.top, dcrect.Width(), dcrect.Height(), &memDC, 0, 0, SRCCOPY);
-	memDC.SelectObject(pBmpOld);
-
-	Membitmap.DeleteObject();
-	memDC.DeleteDC();
-	GetDlgItem(IDC_PIC2)->ReleaseDC(pDC);
-}
-
-void CDToFDemoAppDlg::RBSubView() {
-	CRect dcrect(0, 0, subViewWidth, subViewHeight);
-	CDC memDC;
-	CDC* pDC = GetDlgItem(IDC_PIC3)->GetDC();
-	memDC.CreateCompatibleDC(pDC);
-	CBitmap Membitmap;
-	Membitmap.CreateCompatibleBitmap(pDC, dcrect.Width(), dcrect.Height());
-	CBitmap* pBmpOld = memDC.SelectObject(&Membitmap);
-	cv::Mat pic(subViewWidth, subViewHeight, CV_8UC3);
-
-	directShowCamera->Filter2D(subViewWidth, subViewHeight, pic.data, 1000, 0);
-
-	BITMAPINFO bitInfo;
-	bitInfo.bmiHeader.biBitCount = SPOT_NUMBER;
-	bitInfo.bmiHeader.biWidth = subViewWidth;
-	bitInfo.bmiHeader.biHeight = subViewHeight;
-	bitInfo.bmiHeader.biPlanes = 1;
-	bitInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bitInfo.bmiHeader.biCompression = BI_RGB;
-	bitInfo.bmiHeader.biClrImportant = 0;
-	bitInfo.bmiHeader.biClrUsed = 0;
-	bitInfo.bmiHeader.biSizeImage = 0;
-	bitInfo.bmiHeader.biXPelsPerMeter = 0;
-	bitInfo.bmiHeader.biYPelsPerMeter = 0;
-
-	::StretchDIBits(memDC.GetSafeHdc(), 0, 0,
-		subViewWidth, subViewHeight, 0, 0,
-		subViewWidth, subViewHeight,
-		pic.data, &bitInfo, DIB_RGB_COLORS, SRCCOPY
-	);
-
-	pDC->BitBlt(dcrect.left, dcrect.top, dcrect.Width(), dcrect.Height(), &memDC, 0, 0, SRCCOPY);
-	memDC.SelectObject(pBmpOld);
-
-	Membitmap.DeleteObject();
-	memDC.DeleteDC();
-	GetDlgItem(IDC_PIC3)->ReleaseDC(pDC);
+int CDToFDemoAppDlg::Get2DPos(POINT srcpt, POINT* pt576) {
+	int index = -1;
+	for (int i = 0; i < DP_NUMBER; i++) {
+		if (CheckInRect(srcpt, pt576[i])) {
+			index = i;
+			break;
+		}
+	}
+	return index;
 }

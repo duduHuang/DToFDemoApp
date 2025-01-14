@@ -167,6 +167,7 @@
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>C:\Users\tedhuang\Documents\CypressCX3\DToFDemoApp\DToFDemoApp\DToFDemoApp\include;C:\Users\tedhuang\Documents\CypressCX3\DToFDemoApp\DToFDemoApp\DToFDemoApp\mathgl_x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -84,7 +84,7 @@ BOOL CDToFDemoAppApp::InitInstance()
 	CDToFDemoAppDlg dlg;
 	m_pMainWnd = &dlg;
 	INT_PTR nResponse = dlg.DoModal();
-	if (nResponse == IDC_PREBTN)
+	if (nResponse == IDOK)
 	{
 		// TODO: 在此放置於使用 [Preview] 來停止使用對話方塊時
 		// 處理的程式碼

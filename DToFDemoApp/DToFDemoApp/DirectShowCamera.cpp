@@ -1,8 +1,7 @@
 #include "pch.h"
 #include "DirectShowCamera.h"
 
-bool gIsFull = false;
-unsigned char** gCameraData;
+std::queue<std::vector<BYTE>> frameQueue;
 
 STDMETHODIMP MySampleGrabberCallback::SampleCB(double SampleTime, IMediaSample* pSample) {
 	BYTE* pBuffer;
@@ -17,23 +16,88 @@ STDMETHODIMP MySampleGrabberCallback::SampleCB(double SampleTime, IMediaSample* 
 		return E_FAIL; // 檢查緩衝區大小是否匹配
 	}
 
-	if (!gIsFull) {
+	if (!isFull) {
 		for (int i = 0; i < RANGING_MODE_HEIGHT; ++i) {
 			memcpy(gCameraData[i], pBuffer + (i * RANGING_MODE_WIDTH), RANGING_MODE_WIDTH);
 		}
-		gIsFull = true;
+		isFull = true;
+	}
+
+	if (0 != fileCount) {
+		frameQueue.push(std::vector<BYTE>(pBuffer, pBuffer + size));
+		fileCount--;
 	}
 
 	return S_OK;
 }
 
+void MySampleGrabberCallback::setBuffer(unsigned char** buffer) {
+	this->gCameraData = buffer;
+}
+
+void MySampleGrabberCallback::setQueueBuffer(std::queue<std::vector<BYTE>>* queueBuffer) {
+	//this->frameQueue = *queueBuffer;
+}
+
+void MySampleGrabberCallback::setIsNotFull() {
+	isFull = false;
+}
+
+bool MySampleGrabberCallback::getIsFull() {
+	return isFull;
+}
+
+void MySampleGrabberCallback::setFileCount(int count) {
+	this->fileCount = count;
+}
+
 UINT ShowWindowRealTimeImage(LPVOID pParam) {
-	DirectShowCamera* pThis = reinterpret_cast<DirectShowCamera*>(pParam);
+	DirectShowCamera* pThis = static_cast<DirectShowCamera*>(pParam);
 	pThis->ShowCameraData();
+
+	delete pThis;
 	return 0;
 }
 
-DirectShowCamera::DirectShowCamera(): m_pThread(nullptr),
+UINT WriteFileProcess(LPVOID pParam) {
+	WriteFileThreadParams* params = static_cast<WriteFileThreadParams*>(pParam);
+	char fileName[MAX_PATH];
+	int i = 0;
+	while (true) {
+		std::vector<BYTE> frameData;
+		if (!frameQueue.empty()) {
+			frameData = frameQueue.front();
+			frameQueue.pop();
+		}
+		if (!frameData.empty()) {
+			sprintf(fileName, params->filePath + "\\outFile%d.csv", i++);
+			std::ofstream writeFile(fileName, std::ios::out);
+			int count = 0;
+			for (long j = 0; j < frameData.size(); j++) {
+				writeFile << (int)frameData.at(j);
+				count++;
+				if (RANGING_MODE_WIDTH == count) {
+					writeFile << "\n";
+					count = 0;
+				}
+				else if (i < frameData.size() - 1) {
+					writeFile << ",";
+				}
+			}
+			writeFile << std::endl;
+			writeFile.close();
+			if (params->fileCount == i) {
+				break;
+			}
+		}
+		std::cout << "write camera data...\n";
+	}
+
+	delete params;
+	return 0;
+}
+
+DirectShowCamera::DirectShowCamera(): m_pThread(nullptr), m_writeFileThread(nullptr),
 pLTDC(nullptr), pRTDC(nullptr), pLBDC(nullptr), pRBDC(nullptr) {
 	// 初始化 COM 庫
 	hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
@@ -49,7 +113,7 @@ pLTDC(nullptr), pRTDC(nullptr), pLBDC(nullptr), pRBDC(nullptr) {
 		cameraData[i] = new unsigned char[RANGING_MODE_WIDTH];
 		std::fill(cameraData[i], cameraData[i] + RANGING_MODE_WIDTH, 0);
 	}
-	gCameraData = cameraData;
+	grabberCallback.setBuffer(cameraData);
 
 	histarray = new int*[DP_NUMBER];
 	for (int i = 0; i < DP_NUMBER; ++i) {
@@ -63,7 +127,18 @@ pLTDC(nullptr), pRTDC(nullptr), pLBDC(nullptr), pRBDC(nullptr) {
 
 	std::fill(peak_z, peak_z + DP_NUMBER, 0);
 	std::fill(newarray, newarray + DP_NUMBER, 0);
-	std::fill(histpoints, histpoints + DP_NUMBER, POINT{ 0, 0 });
+	histpoints[0].x = INDEX_START_X;
+	histpoints[0].y = INDEX_START_Y;
+	for (int j = 0; j < SPOT_NUMBER; j++) {
+		for (int i = 0; i < SPOT_NUMBER; i++) {
+			histpoints[i + j * SPOT_NUMBER].x = histpoints[i + j * SPOT_NUMBER - 1].x + 17;
+			histpoints[i + j * SPOT_NUMBER].y = INDEX_START_Y - 11 * j;
+			if (0 == (i + j * SPOT_NUMBER) % SPOT_NUMBER) {
+				histpoints[i + j * SPOT_NUMBER].x = INDEX_START_X;
+			}
+		}
+	}
+
 	isPreview = false;
 
 	CreateDirectory(tempPath, NULL);
@@ -78,14 +153,16 @@ pLTDC(nullptr), pRTDC(nullptr), pLBDC(nullptr), pRBDC(nullptr) {
 DirectShowCamera ::~DirectShowCamera() {
 	// 停止執行緒
 	if (m_pThread) {
-		// 通知執行緒停止
-		m_bThreadStop = true;
-
+		isPreview = false;
 		// 等待執行緒結束
 		WaitForSingleObject(m_pThread->m_hThread, INFINITE);
 
 		// 刪除執行緒物件
 		m_pThread = nullptr;
+	}
+	if (m_writeFileThread) {
+		WaitForSingleObject(m_writeFileThread->m_hThread, INFINITE);
+		m_writeFileThread = nullptr;
 	}
 	if (pControl) {
 		pControl.Release();
@@ -239,6 +316,10 @@ int DirectShowCamera::listDevices(std::vector<std::string>& list) {
 void DirectShowCamera::setSubViewWH(int width, int height) {
 	subViewWidth = width;
 	subViewHeight = height;
+	histW = width;
+	histH = height;
+	cloud3dW = width;
+	cloud3dH = height;
 }
 
 void DirectShowCamera::setCDC(CDC* pLTDC, CDC* pRTDC, CDC* pLBDC, CDC* pRBDC) {
@@ -412,24 +493,25 @@ void DirectShowCamera::stop() {
 	if (pControl) {
 		pControl->Stop();
 	}
+	isPreview = false;
 	// 停止執行緒
 	if (m_pThread) {
-		// 通知執行緒停止
-		m_bThreadStop = true;
-
 		// 等待執行緒結束
 		WaitForSingleObject(m_pThread->m_hThread, INFINITE);
 
 		// 刪除執行緒物件
 		m_pThread = nullptr;
 	}
-	isPreview = false;
-	gIsFull = false;
+	grabberCallback.setIsNotFull();
+}
+
+POINT* DirectShowCamera::getPoints() {
+	return histpoints;
 }
 
 void DirectShowCamera::ShowCameraData() {
 	while (isPreview) {
-		if (gIsFull) {
+		if (grabberCallback.getIsFull()) {
 			ParseOneLine();
 			int cnt = 0;
 			for (int i = 0; i < SPOT_NUMBER; i++) {
@@ -444,35 +526,48 @@ void DirectShowCamera::ShowCameraData() {
 			RTSubView();
 			LBSubView();
 			RBSubView();
-			gIsFull = false;
+			grabberCallback.setIsNotFull();
 			std::cout << "show camera...\n";
 			//outFile << "show camera...\n";
 		}
 	}
 }
 
+void DirectShowCamera::setHistIndex(const int hist, const int width, const int height) {
+	histIndex = hist;
+	histW = width;
+	histH = height;
+}
+
+void DirectShowCamera::setRotate(const int x, const int y, const int width, const int height) {
+	rotatx = x;
+	rotaty = y;
+	cloud3dW = width;
+	cloud3dH = height;
+}
+
 void DirectShowCamera::LTSubView() {
-	cv::Mat pic(subViewWidth, subViewHeight, CV_8UC3);
-	Cloud3D(subViewWidth, subViewHeight, pic.data, rotatx, rotaty);
-	subView(pLTDC, pic.data);
+	cv::Mat pic(cloud3dW, cloud3dH, CV_8UC3);
+	Cloud3D(cloud3dW, cloud3dH, pic.data, rotatx, rotaty);
+	subView(pLTDC, pic.data, cloud3dW, cloud3dH);
 }
 
 void DirectShowCamera::RTSubView() {
-	cv::Mat pic(subViewWidth, subViewHeight, CV_8UC3);
-	Histgram(subViewWidth, subViewHeight, pic.data, histindex);
-	subView(pRTDC, pic.data);
+	cv::Mat pic(histW, histH, CV_8UC3);
+	Histgram(histW, histH, pic.data, histIndex);
+	subView(pRTDC, pic.data, histW, histH);
 }
 
 void DirectShowCamera::LBSubView() {
 	cv::Mat pic(subViewWidth, subViewHeight, CV_8UC3);
 	Cloud2D(subViewWidth, subViewHeight, pic.data);
-	subView(pLBDC, pic.data);
+	subView(pLBDC, pic.data, subViewWidth, subViewHeight);
 }
 
 void DirectShowCamera::RBSubView() {
 	cv::Mat pic(subViewWidth, subViewHeight, CV_8UC3);
 	Filter2D(subViewWidth, subViewHeight, pic.data, 1000, 0);
-	subView(pRBDC, pic.data);
+	subView(pRBDC, pic.data, subViewWidth, subViewHeight);
 }
 
 void DirectShowCamera::Cloud3D(int width, int height, uchar* pic, int rx, int ry) {
@@ -508,7 +603,7 @@ void DirectShowCamera::Cloud3D(int width, int height, uchar* pic, int rx, int ry
 	memcpy(pic, pic1.data, gr.GetHeight() * gr.GetWidth() * pic1.channels());
 }
 
-void DirectShowCamera::Histgram(int width, int height, uchar* pic, const int histindex) {
+void DirectShowCamera::Histgram(int width, int height, uchar* pic, const int histIndex) {
 	mglGraph gr(0, width, height);
 	gr.ClearFrame();
 	int i, n = 45;
@@ -521,7 +616,7 @@ void DirectShowCamera::Histgram(int width, int height, uchar* pic, const int his
 	gr.SetColor(0, 255, 255, 0);
 	gr.SetColor(1, 0, 255, 255);
 
-	if (histindex == -1) {
+	if (histIndex == -1) {
 		for (int j = 0; j < DP_NUMBER; j++) {
 			for (i = 0; i < n; i++) {
 				x.a[i] = i;
@@ -532,7 +627,7 @@ void DirectShowCamera::Histgram(int width, int height, uchar* pic, const int his
 	} else {
 		for (i = 0; i < n; i++) {
 			x.a[i] = i;
-			z.a[i] = histarray[histindex][i];
+			z.a[i] = histarray[histIndex][i];
 		}
 		gr.Plot(x, z);
 	}
@@ -632,7 +727,7 @@ void DirectShowCamera::littleToBigFourByte(CString* bData, int _size, int expone
 
 void DirectShowCamera::ExtractBin(int rowIndex, int num) {
 	CString strarray[RANGING_MODE_WIDTH + 1];
-	unsigned char* ptr = gCameraData[rowIndex];
+	unsigned char* ptr = cameraData[rowIndex];
 
 	// 將 ptr 的每個元素轉換為 CString
 	for (int i = 0; i < (RANGING_MODE_WIDTH + 1); ++i) {
@@ -645,7 +740,7 @@ void DirectShowCamera::ExtractBin(int rowIndex, int num) {
 
 void DirectShowCamera::fullframe_process(int rowIndex, int* ppickz) {
 	CString strarray[RANGING_MODE_WIDTH + 1];
-	unsigned char* ptr = gCameraData[rowIndex];
+	unsigned char* ptr = cameraData[rowIndex];
 
 	// 將 ptr 的每個元素轉換為 CString
 	for (int i = 0; i < (RANGING_MODE_WIDTH + 1); ++i) {
@@ -681,12 +776,41 @@ void DirectShowCamera::ParseOneLine() {
 	}
 }
 
-void DirectShowCamera::writeFile(const char* filePath, const unsigned char* data, const int fileCount) {
-	
+void DirectShowCamera::writeFile(const int fileCount) {
+	CComPtr<IFileDialog> pFolderDialog;
+	hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pFolderDialog));
+	if (SUCCEEDED(hr)) {
+		DWORD options;
+		pFolderDialog->GetOptions(&options);
+		pFolderDialog->SetOptions(options | FOS_PICKFOLDERS); // 啟用資料夾選擇模式
+
+		hr = pFolderDialog->Show(nullptr);
+		if (SUCCEEDED(hr)) {
+			CComPtr<IShellItem> pItem;
+			hr = pFolderDialog->GetResult(&pItem);
+			if (SUCCEEDED(hr)) {
+				PWSTR pszFilePath = nullptr;
+				hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+				if (SUCCEEDED(hr)) {
+					CString folderPath(pszFilePath);
+					AfxMessageBox(_T("選擇的資料夾是：") + folderPath);
+					WriteFileThreadParams* params = new WriteFileThreadParams{
+						fileCount,
+						folderPath
+					};
+					//grabberCallback.setQueueBuffer(&frameQueue);
+					outFile << "file count:" << fileCount << " file path:" << folderPath << std::endl;
+					grabberCallback.setFileCount(fileCount);
+					m_writeFileThread = AfxBeginThread(WriteFileProcess, params);
+					CoTaskMemFree(pszFilePath);
+				}
+			}
+		}
+	}
 }
 
-void DirectShowCamera::subView(CDC* pDC, uchar* data) {
-	CRect dcrect(0, 0, subViewWidth, subViewHeight);
+void DirectShowCamera::subView(CDC* pDC, uchar* data, int width, int height) {
+	CRect dcrect(0, 0, width, height);
 	CDC memDC;
 	CBitmap Membitmap;
 	memDC.CreateCompatibleDC(pDC);
@@ -695,8 +819,8 @@ void DirectShowCamera::subView(CDC* pDC, uchar* data) {
 
 	BITMAPINFO bitInfo;
 	bitInfo.bmiHeader.biBitCount = SPOT_NUMBER;
-	bitInfo.bmiHeader.biWidth = subViewWidth;
-	bitInfo.bmiHeader.biHeight = subViewHeight;
+	bitInfo.bmiHeader.biWidth = width;
+	bitInfo.bmiHeader.biHeight = height;
 	bitInfo.bmiHeader.biPlanes = 1;
 	bitInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	bitInfo.bmiHeader.biCompression = BI_RGB;
@@ -707,8 +831,8 @@ void DirectShowCamera::subView(CDC* pDC, uchar* data) {
 	bitInfo.bmiHeader.biYPelsPerMeter = 0;
 
 	::StretchDIBits(memDC.GetSafeHdc(), 0, 0,
-		subViewWidth, subViewHeight, 0, 0,
-		subViewWidth, subViewHeight,
+		width, height, 0, 0,
+		width, height,
 		data, &bitInfo, DIB_RGB_COLORS, SRCCOPY
 	);
 

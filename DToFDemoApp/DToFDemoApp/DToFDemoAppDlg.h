@@ -36,9 +36,10 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
-	CStatic picView;
+	CStatic m_picView;
 	afx_msg void OnBnClickedPreview();
 	afx_msg void OnBnClickedCancel();
+	afx_msg void OnBnClickedButtonSetText();
 
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
@@ -47,13 +48,15 @@ public:
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 
 private:
-	const int subViewWidth = 640, subViewHeight = 360;
-	int rotatx = 40, rotaty = 50;
+	const int subViewWidth = 640, subViewHeight = 360, defaultFileCount = 30;
+	CEdit m_editControl;
+	CStatic m_staticText;
+	HCURSOR defaultCursor;
+	int startX = 0, startY = 0, rotatX = 40, rotatY = 50;
+	CRect pLTSubView, pRTSubView;
+	bool cursorLTFlag = false, cursorRTFlag = false;
 	void SetSubView();
 	void DisplaySubView();
-	void LTSubView();
-	void RTSubView();
-	void LBSubView();
-	void RBSubView();
+	int Get2DPos(POINT srcpt, POINT* pt576);
 
 };
