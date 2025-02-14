@@ -61,6 +61,7 @@ void CDToFDemoAppDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_PIC, m_picView);
 	DDX_Control(pDX, IDC_EDIT1, m_editControl);
+	DDX_Control(pDX, IDC_LIST2, m_deviceListBox); // 綁定控件變數
 }
 
 BEGIN_MESSAGE_MAP(CDToFDemoAppDlg, CDialogEx)
@@ -112,7 +113,7 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 設定小圖示
 
 	// TODO: 在此加入額外的初始設定
-	directShowCamera = new DirectShowCamera();
+	directShowCamera = new DirectShowCamera[2];
 
 	GetDlgItem(IDC_PIC)->SetWindowPos(GetParent(), 10, 10, 1280, 720, SWP_SHOWWINDOW);
 
@@ -189,20 +190,29 @@ HCURSOR CDToFDemoAppDlg::OnQueryDragIcon()
 }
 
 void CDToFDemoAppDlg::OnBnClickedPreview() {
-	const char* targetDeviceName = "CX3-UVC";
+	const char* dToFDeviceName = "CX3-UVC", * rgbDeviceName = "USB Camera";
 	std::vector<std::string> list;
 	int deviceCount = directShowCamera->listDevices(list);
+	for (int i = 0; i < deviceCount; ++i) {
+		std::string str(list.at(i));
+		m_deviceListBox.InsertString(i, CString(str.c_str()));
+	}
+	m_deviceListBox.UpdateData(TRUE);
 	SetSubView();
 	DisplaySubView();
-	directShowCamera->openCamera(targetDeviceName);
+	directShowCamera->openCamera(dToFDeviceName);
 	directShowCamera->prepareCamera();
 	directShowCamera->run();
+	/*directShowCamera[1].openCamera(rgbDeviceName);
+	directShowCamera[1].prepareCamera();
+	directShowCamera[1].run();*/
 	MSG msg;
 	while (directShowCamera->isPreview) {
 		if (GetMessage(&msg, nullptr, 0, 0) > 0) {
 			if (msg.message == WM_KEYDOWN && msg.wParam == VK_RETURN) {
 				// 如果按下 Enter 鍵，退出消息循環
 				directShowCamera->isPreview = false;
+				directShowCamera[1].isPreview = false;
 				PostQuitMessage(0); // 發送 WM_QUIT
 			}
 			TranslateMessage(&msg);
@@ -211,12 +221,14 @@ void CDToFDemoAppDlg::OnBnClickedPreview() {
 		else {
 			// 如果 GetMessage 返回 0，表示收到 WM_QUIT
 			directShowCamera->isPreview = false;
+			directShowCamera[1].isPreview = false;
 		}
 	}
 }
 
 void CDToFDemoAppDlg::OnBnClickedCancel() {
 	directShowCamera->stop();
+	directShowCamera[1].stop();
 	PostQuitMessage(0); // 發送 WM_QUIT
 }
 

@@ -49,6 +49,7 @@ public:
 
 private:
 	const int subViewWidth = 640, subViewHeight = 360, defaultFileCount = 30;
+	CListBox m_deviceListBox;
 	CEdit m_editControl;
 	CStatic m_staticText;
 	HCURSOR defaultCursor;

@@ -71,7 +71,6 @@ public:
 	};
 
 	void setBuffer(unsigned char** buffer);
-	void setQueueBuffer(std::queue<std::vector<BYTE>>* queueBuffer);
 	void setIsNotFull();
 	bool getIsFull();
 	void setFileCount(int count);
@@ -139,6 +138,8 @@ private:
 	HCURSOR defaultcursor;
 	mglData x, y, z;
 	int rotatx = 40, rotaty = 50, histIndex = -1, histW = 0, histH = 0, cloud3dW = 0, cloud3dH = 0;
+	char* deviceName;
+	const char* dToFDevice = "CX3-UVC";
 };
 
 #endif // !__H_DIRECTSHOWCAMERA__

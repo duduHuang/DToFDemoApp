@@ -35,10 +35,6 @@ void MySampleGrabberCallback::setBuffer(unsigned char** buffer) {
 	this->gCameraData = buffer;
 }
 
-void MySampleGrabberCallback::setQueueBuffer(std::queue<std::vector<BYTE>>* queueBuffer) {
-	//this->frameQueue = *queueBuffer;
-}
-
 void MySampleGrabberCallback::setIsNotFull() {
 	isFull = false;
 }
@@ -96,6 +92,7 @@ UINT WriteFileProcess(LPVOID pParam) {
 }
 
 DirectShowCamera::DirectShowCamera(): m_pThread(nullptr), m_writeFileThread(nullptr),
+deviceName(nullptr),
 pLTDC(nullptr), pRTDC(nullptr), pLBDC(nullptr), pRBDC(nullptr) {
 	// 初始化 COM 庫
 	hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
@@ -224,6 +221,10 @@ DirectShowCamera ::~DirectShowCamera() {
 	if (nullptr != histpoints) {
 		delete[] histpoints;
 		histpoints = nullptr;
+	}
+	if (deviceName) {
+		delete[] deviceName;
+		deviceName = nullptr;
 	}
 	if (pLTDC) {
 		pLTDC->DeleteDC();
@@ -368,6 +369,9 @@ void DirectShowCamera::openCamera(const char* targetDevice) {
 				count++;
 			}
 			if (0 == strcmp(tmp, targetDevice)) {
+				deviceName = new char[count];
+				strcpy(deviceName, targetDevice);
+				outFile << "Selected: " << deviceName << std::endl;
 				break;
 			}
 		}
@@ -437,7 +441,7 @@ void DirectShowCamera::prepareCamera() {
 	// 設置 SampleGrabber 的媒體類型
 	ZeroMemory(&mt, sizeof(mt));
 	mt.majortype = MEDIATYPE_Video;
-	mt.subtype = MEDIASUBTYPE_UYVY; // 或其他格式
+	mt.subtype = (0 == strcmp(deviceName, dToFDevice)) ? MEDIASUBTYPE_UYVY : MEDIASUBTYPE_YUY2; // 或其他格式
 	hr = pSampleGrabber->SetMediaType(&mt);
 	if (FAILED(hr)) {
 		outFile << "Failed to set media type on SampleGrabber. HRESULT: " << std::hex << hr << std::endl;
@@ -483,7 +487,9 @@ void DirectShowCamera::run() {
 	outFile << "Preview running. Press Enter to exit..." << std::endl;
 	// 添加消息循環，保持預覽窗口打開
 	isPreview = true;
-	m_pThread = AfxBeginThread(ShowWindowRealTimeImage, this);
+	if (0 == strcmp(deviceName, dToFDevice)) {
+		m_pThread = AfxBeginThread(ShowWindowRealTimeImage, this);
+	}
 }
 
 void DirectShowCamera::stop() {
@@ -774,6 +780,9 @@ void DirectShowCamera::ParseOneLine() {
 }
 
 void DirectShowCamera::writeFile(const int fileCount) {
+	if (0 != strcmp(deviceName, dToFDevice)) {
+		return;
+	}
 	CComPtr<IFileDialog> pFolderDialog;
 	hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pFolderDialog));
 	if (SUCCEEDED(hr)) {
@@ -795,7 +804,6 @@ void DirectShowCamera::writeFile(const int fileCount) {
 						fileCount,
 						folderPath
 					};
-					//grabberCallback.setQueueBuffer(&frameQueue);
 					outFile << "file count:" << fileCount << " file path:" << folderPath << std::endl;
 					grabberCallback.setFileCount(fileCount);
 					m_writeFileThread = AfxBeginThread(WriteFileProcess, params);
