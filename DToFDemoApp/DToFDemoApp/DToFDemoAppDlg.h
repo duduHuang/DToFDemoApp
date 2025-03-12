@@ -33,6 +33,7 @@ protected:
 	afx_msg void OnDestroy();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
@@ -40,24 +41,30 @@ public:
 	afx_msg void OnBnClickedPreview();
 	afx_msg void OnBnClickedCancel();
 	afx_msg void OnBnClickedButtonSetText();
+	afx_msg void OnBnClickedSetMaxValue();
 
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnHScroll(NMHDR* pNMHDR, LRESULT* pResult);
 
 private:
-	const int subViewWidth = 640, subViewHeight = 360, defaultFileCount = 30;
+	const int defaultFileCount = 30, defaultMaxValue = 1000;
 	CListBox m_deviceListBox;
-	CEdit m_editControl;
-	CStatic m_staticText;
+	CSliderCtrl m_sliderThreshold;
+	CEdit m_editControl, m_maxEditControl;
+	CStatic m_thresholdText;
 	HCURSOR defaultCursor;
 	int startX = 0, startY = 0, rotatX = 40, rotatY = 50;
 	CRect pLTSubView, pRTSubView;
 	bool cursorLTFlag = false, cursorRTFlag = false;
+	CRect m_initClientRect;         // 記錄視窗初始大小
+	std::map<UINT, CRect> m_controls;
 	void SetSubView();
 	void DisplaySubView();
 	int Get2DPos(POINT srcpt, POINT* pt576);
+	void UpdateSliderValue(int value);
 
 };

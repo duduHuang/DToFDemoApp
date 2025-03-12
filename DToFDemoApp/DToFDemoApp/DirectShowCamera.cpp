@@ -549,6 +549,14 @@ void DirectShowCamera::setRotate(const int x, const int y, const int width, cons
 	cloud3dH = height;
 }
 
+void DirectShowCamera::setFilterThreshold(int threshold) {
+	filterThreshold = threshold;
+}
+
+void DirectShowCamera::setMaxValue(int max) {
+	maxValue = max;
+}
+
 void DirectShowCamera::LTSubView() {
 	cv::Mat pic(cloud3dW, cloud3dH, CV_8UC3);
 	Cloud3D(cloud3dW, cloud3dH, pic.data, rotatx, rotaty);
@@ -569,7 +577,7 @@ void DirectShowCamera::LBSubView() {
 
 void DirectShowCamera::RBSubView() {
 	cv::Mat pic(subViewWidth, subViewHeight, CV_8UC3);
-	Filter2D(subViewWidth, subViewHeight, pic.data, 1000, 0);
+	Filter2D(subViewWidth, subViewHeight, pic.data, filterThreshold, 0);
 	subView(pRBDC, pic.data, subViewWidth, subViewHeight);
 }
 

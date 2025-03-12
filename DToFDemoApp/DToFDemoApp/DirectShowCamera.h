@@ -95,10 +95,12 @@ public:
 	void RBSubView();
 	void setHistIndex(const int hist, const int width, const int height);
 	void setRotate(const int x, const int y, const int width, const int height);
+	void setFilterThreshold(int threshold);
+	void setMaxValue(int max);
 	void Cloud3D(int width, int height, uchar* pic, int rx, int ry);
 	void Histgram(int width, int height, uchar* pic, const int histIndex);
 	void Cloud2D(int width, int height, uchar* pic);
-	void Filter2D(int width, int height, uchar* pic, int low_threadhold, int hightthreadhold);
+	void Filter2D(int width, int height, uchar* pic, int lowThresdhold, int hightThresdhold);
 
 	void littleToBigFourByte(CString* bData, int _size, int exponent, int fraction, bool _signed, int* pint);
 	void ExtractBin(int rowIndex, int num);
@@ -137,7 +139,7 @@ private:
 	POINT* histpoints;
 	HCURSOR defaultcursor;
 	mglData x, y, z;
-	int rotatx = 40, rotaty = 50, histIndex = -1, histW = 0, histH = 0, cloud3dW = 0, cloud3dH = 0;
+	int rotatx = 40, rotaty = 50, histIndex = -1, histW = 0, histH = 0, cloud3dW = 0, cloud3dH = 0, filterThreshold = 1000, maxValue = 2250;
 	char* deviceName;
 	const char* dToFDevice = "CX3-UVC";
 };

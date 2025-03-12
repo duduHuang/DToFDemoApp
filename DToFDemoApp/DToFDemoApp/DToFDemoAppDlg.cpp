@@ -61,16 +61,21 @@ void CDToFDemoAppDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_PIC, m_picView);
 	DDX_Control(pDX, IDC_EDIT1, m_editControl);
+	DDX_Control(pDX, IDC_EDIT2, m_maxEditControl);
 	DDX_Control(pDX, IDC_LIST2, m_deviceListBox); // 綁定控件變數
+	DDX_Control(pDX, IDC_SLIDER1, m_sliderThreshold);
+	DDX_Control(pDX, IDC_STATIC, m_thresholdText);
 }
 
 BEGIN_MESSAGE_MAP(CDToFDemoAppDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
+	ON_WM_SIZE()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_PREBTN, &CDToFDemoAppDlg::OnBnClickedPreview)
 	ON_BN_CLICKED(IDCANCEL, &CDToFDemoAppDlg::OnBnClickedCancel)
 	ON_BN_CLICKED(IDC_EDITBTN, &CDToFDemoAppDlg::OnBnClickedButtonSetText)
+	ON_BN_CLICKED(IDC_MAXBTN, &CDToFDemoAppDlg::OnBnClickedSetMaxValue)
 
 	ON_WM_MOUSEMOVE()
 	ON_WM_SETCURSOR()
@@ -78,6 +83,7 @@ BEGIN_MESSAGE_MAP(CDToFDemoAppDlg, CDialogEx)
 	ON_WM_LBUTTONUP()
 	ON_WM_TIMER()
 	ON_WM_CTLCOLOR()
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLIDER1, &CDToFDemoAppDlg::OnHScroll)
 END_MESSAGE_MAP()
 
 
@@ -115,17 +121,76 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	// TODO: 在此加入額外的初始設定
 	directShowCamera = new DirectShowCamera[2];
 
-	GetDlgItem(IDC_PIC)->SetWindowPos(GetParent(), 10, 10, 1280, 720, SWP_SHOWWINDOW);
+	int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+	int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+	int width = screenWidth * 0.8;
+	int height = screenHeight * 0.8;
+	int posX = (screenWidth - width) / 2;
+	int posY = (screenHeight - height) / 2;
+	MoveWindow(posX, posY, width, height);
+
+	GetDlgItem(IDC_PIC)->SetWindowPos(GetParent(),  10,               10,                width * 0.3, height * 0.3, SWP_SHOWWINDOW);
+	GetDlgItem(IDC_PIC1)->SetWindowPos(GetParent(), width * 0.3 + 11, 10,                width * 0.3, height * 0.3, SWP_SHOWWINDOW);
+	GetDlgItem(IDC_PIC2)->SetWindowPos(GetParent(), 10,               height * 0.3 + 11, width * 0.3, height * 0.3, SWP_SHOWWINDOW);
+	GetDlgItem(IDC_PIC3)->SetWindowPos(GetParent(), width * 0.3 + 11, height * 0.3 + 11, width * 0.3, height * 0.3, SWP_SHOWWINDOW);
+
+	CRect rect;
+	GetDlgItem(IDC_LIST2)->GetWindowRect(&rect);
+	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
+	GetDlgItem(IDC_LIST2)->SetWindowPos(GetParent(), width * 0.84, 10, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+
+	GetDlgItem(IDC_EDIT1)->GetWindowRect(&rect);
+	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
+	GetDlgItem(IDC_EDIT1)->SetWindowPos(GetParent(), width * 0.92, height * 0.7, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+
+	GetDlgItem(IDC_EDIT2)->GetWindowRect(&rect);
+	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
+	GetDlgItem(IDC_EDIT2)->SetWindowPos(GetParent(), width * 0.92, height * 0.6, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+
+	GetDlgItem(IDC_EDITBTN)->GetWindowRect(&rect);
+	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
+	GetDlgItem(IDC_EDITBTN)->SetWindowPos(GetParent(), width * 0.92, height * 0.75, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+
+	GetDlgItem(IDC_MAXBTN)->GetWindowRect(&rect);
+	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
+	GetDlgItem(IDC_MAXBTN)->SetWindowPos(GetParent(), width * 0.92, height * 0.65, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+
+	GetDlgItem(IDCANCEL)->GetWindowRect(&rect);
+	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
+	GetDlgItem(IDCANCEL)->SetWindowPos(GetParent(), width * 0.92, height * 0.8, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+
+	GetDlgItem(IDC_PREBTN)->GetWindowRect(&rect);
+	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
+	GetDlgItem(IDC_PREBTN)->SetWindowPos(GetParent(), width * 0.84, height * 0.8, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+
+	GetDlgItem(IDC_SLIDER1)->SetWindowPos(GetParent(), 10, height * 0.84, width * 0.8, 30, SWP_SHOWWINDOW);
+	GetDlgItem(IDC_STATIC)->SetWindowPos(GetParent(), width * 0.8 + 10, height * 0.84 + 5, 30, 30, SWP_SHOWWINDOW);
+
+	m_sliderThreshold.SetRange(0, 7500);
+	m_sliderThreshold.SetTicFreq(100);
+	m_sliderThreshold.SetPos(defaultMaxValue);
+
+	UpdateSliderValue(m_sliderThreshold.GetPos());
+
+	GetClientRect(m_initClientRect);
+	UINT controlIDs[] = {
+		IDC_PIC, IDC_PIC1, IDC_PIC2, IDC_PIC3, IDC_PREBTN, IDCANCEL, IDC_EDIT1, IDC_EDIT2, IDC_EDITBTN, IDC_MAXBTN, IDC_LIST2, IDC_SLIDER1, IDC_STATIC
+	};
+	for (UINT id : controlIDs) {
+		GetDlgItem(id)->GetWindowRect(rect);
+		ScreenToClient(&rect);
+		m_controls[id] = rect;
+	}
 
 	pLTSubView.top = 0;
 	pLTSubView.left = 0;
-	pLTSubView.bottom = 360;
-	pLTSubView.right = 640;
+	pLTSubView.bottom = m_controls[IDC_PIC].bottom;
+	pLTSubView.right = m_controls[IDC_PIC].right;
 
-	pRTSubView.top = 321;
+	pRTSubView.top = m_controls[IDC_PIC2].top - (40 * 0.3) + 1;
 	pRTSubView.left = 0;
-	pRTSubView.bottom = 720;
-	pRTSubView.right = 640;
+	pRTSubView.bottom = m_controls[IDC_PIC2].bottom;
+	pRTSubView.right = m_controls[IDC_PIC2].right;
 
 	defaultCursor = GetCursor();
 
@@ -182,6 +247,40 @@ void CDToFDemoAppDlg::OnPaint()
 	}
 }
 
+// 視窗大小改變時，等比例調整元件大小與位置
+void CDToFDemoAppDlg::OnSize(UINT nType, int cx, int cy) {
+	CDialogEx::OnSize(nType, cx, cy);
+
+	if (0 == m_initClientRect.Width() || 0 == m_initClientRect.Height()) return;
+
+	CRect newClientRect;
+	GetClientRect(&newClientRect);
+	float scaleX = (float)newClientRect.Width() / m_initClientRect.Width();
+	float scaleY = (float)newClientRect.Height() / m_initClientRect.Height();
+
+	for (const auto& [id, initRect] : m_controls) {
+		CRect rect;
+		rect.left = (int)(initRect.left * scaleX);
+		rect.top = (int)(initRect.top * scaleY);
+		rect.right = (int)(initRect.right * scaleX);
+		rect.bottom = (int)(initRect.bottom * scaleY);
+
+		GetDlgItem(id)->MoveWindow(&rect);
+	}
+	pLTSubView.top = 0;
+	pLTSubView.left = 0;
+	pLTSubView.bottom = m_controls[IDC_PIC].bottom;
+	pLTSubView.right = m_controls[IDC_PIC].right;
+
+	pRTSubView.top = m_controls[IDC_PIC2].top - (40 * scaleY);
+	pRTSubView.left = 0;
+	pRTSubView.bottom = m_controls[IDC_PIC2].bottom;
+	pRTSubView.right = m_controls[IDC_PIC2].right;
+
+	directShowCamera->setSubViewWH(m_controls[IDC_PIC].Width(), m_controls[IDC_PIC].Height());
+	DisplaySubView();
+}
+
 // 當使用者拖曳最小化視窗時，
 // 系統呼叫這個功能取得游標顯示。
 HCURSOR CDToFDemoAppDlg::OnQueryDragIcon()
@@ -199,7 +298,7 @@ void CDToFDemoAppDlg::OnBnClickedPreview() {
 	}
 	m_deviceListBox.UpdateData(TRUE);
 	SetSubView();
-	DisplaySubView();
+	//DisplaySubView();
 	directShowCamera->openCamera(dToFDeviceName);
 	directShowCamera->prepareCamera();
 	directShowCamera->run();
@@ -212,7 +311,7 @@ void CDToFDemoAppDlg::OnBnClickedPreview() {
 			if (msg.message == WM_KEYDOWN && msg.wParam == VK_RETURN) {
 				// 如果按下 Enter 鍵，退出消息循環
 				directShowCamera->isPreview = false;
-				directShowCamera[1].isPreview = false;
+				//directShowCamera[1].isPreview = false;
 				PostQuitMessage(0); // 發送 WM_QUIT
 			}
 			TranslateMessage(&msg);
@@ -221,14 +320,14 @@ void CDToFDemoAppDlg::OnBnClickedPreview() {
 		else {
 			// 如果 GetMessage 返回 0，表示收到 WM_QUIT
 			directShowCamera->isPreview = false;
-			directShowCamera[1].isPreview = false;
+			//directShowCamera[1].isPreview = false;
 		}
 	}
 }
 
 void CDToFDemoAppDlg::OnBnClickedCancel() {
 	directShowCamera->stop();
-	directShowCamera[1].stop();
+	//directShowCamera[1].stop();
 	PostQuitMessage(0); // 發送 WM_QUIT
 }
 
@@ -237,12 +336,18 @@ void CDToFDemoAppDlg::OnBnClickedButtonSetText() {
 	m_editControl.GetWindowTextW(inputText);
 	if (!inputText.IsEmpty()) {
 		int number = _ttoi(inputText);
-		if (0 != number) {
-			directShowCamera->writeFile(number);
-		}
-		else {
-			directShowCamera->writeFile(defaultFileCount);
-		}
+		0 != number ? directShowCamera->writeFile(number) : directShowCamera->writeFile(defaultFileCount);
+	}
+}
+
+void CDToFDemoAppDlg::OnBnClickedSetMaxValue() {
+	CString inputText;
+	
+	m_maxEditControl.GetWindowTextW(inputText);
+	if (!inputText.IsEmpty()) {
+		int number = _ttoi(inputText);
+		number = defaultMaxValue < number ? number : defaultMaxValue;
+		directShowCamera->setMaxValue(number);
 	}
 }
 
@@ -345,8 +450,15 @@ void CDToFDemoAppDlg::OnLButtonUp(UINT nFlags, CPoint point) {
 	CDialogEx::OnLButtonUp(nFlags, point);
 }
 
+void CDToFDemoAppDlg::OnHScroll(NMHDR* pNMHDR, LRESULT* pResult) {
+	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
+	// TODO: 在此加入控制項告知處理常式程式碼
+	UpdateSliderValue(m_sliderThreshold.GetPos());
+	*pResult = 0;
+}
+
 void CDToFDemoAppDlg::SetSubView() {
-	directShowCamera->setSubViewWH(subViewWidth, subViewHeight);
+	directShowCamera->setSubViewWH(m_controls[IDC_PIC].Width(), m_controls[IDC_PIC].Height());
 	directShowCamera->setCDC(
 		GetDlgItem(IDC_PIC)->GetDC(),
 		GetDlgItem(IDC_PIC1)->GetDC(),
@@ -359,22 +471,22 @@ void CDToFDemoAppDlg::DisplaySubView() {
 	GetDlgItem(IDC_PIC)->SetWindowPos(
 		GetParent(),
 		0, 0,
-		subViewWidth, subViewHeight,
+		m_controls[IDC_PIC].Width(), m_controls[IDC_PIC].Height(),
 		SWP_SHOWWINDOW);
 	GetDlgItem(IDC_PIC1)->SetWindowPos(
 		GetParent(),
-		subViewWidth + 1, 0,
-		subViewWidth, subViewHeight,
+		m_controls[IDC_PIC1].Width() + 1, 0,
+		m_controls[IDC_PIC1].Width(), m_controls[IDC_PIC1].Height(),
 		SWP_SHOWWINDOW);
 	GetDlgItem(IDC_PIC2)->SetWindowPos(
 		GetParent(),
-		0, subViewHeight + 1,
-		subViewWidth, subViewHeight,
+		0, m_controls[IDC_PIC2].Height() + 1,
+		m_controls[IDC_PIC2].Width(), m_controls[IDC_PIC2].Height(),
 		SWP_SHOWWINDOW);
 	GetDlgItem(IDC_PIC3)->SetWindowPos(
 		GetParent(),
-		subViewWidth + 1, subViewHeight + 1,
-		subViewWidth, subViewHeight,
+		m_controls[IDC_PIC3].Width() + 1, m_controls[IDC_PIC3].Height() + 1,
+		m_controls[IDC_PIC3].Width(), m_controls[IDC_PIC3].Height(),
 		SWP_SHOWWINDOW);
 }
 
@@ -408,4 +520,11 @@ int CDToFDemoAppDlg::Get2DPos(POINT srcpt, POINT* pt576) {
 		}
 	}
 	return index;
+}
+
+void CDToFDemoAppDlg::UpdateSliderValue(int value) {
+	CString strValue;
+	strValue.Format(_T("%d"), value);
+	m_thresholdText.SetWindowText(strValue);
+	directShowCamera->setFilterThreshold(value);
 }
