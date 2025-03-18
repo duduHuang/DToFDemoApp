@@ -122,17 +122,6 @@ pLTDC(nullptr), pRTDC(nullptr), pLBDC(nullptr), pRBDC(nullptr) {
 
 	std::fill(peak_z, peak_z + DP_NUMBER, 0);
 	std::fill(newarray, newarray + DP_NUMBER, 0);
-	histpoints[0].x = INDEX_START_X;
-	histpoints[0].y = INDEX_START_Y;
-	for (int j = 0; j < SPOT_NUMBER; j++) {
-		for (int i = 0; i < SPOT_NUMBER; i++) {
-			histpoints[i + j * SPOT_NUMBER].x = histpoints[i + j * SPOT_NUMBER - 1].x + 17;
-			histpoints[i + j * SPOT_NUMBER].y = INDEX_START_Y - 11 * j;
-			if (0 == (i + j * SPOT_NUMBER) % SPOT_NUMBER) {
-				histpoints[i + j * SPOT_NUMBER].x = INDEX_START_X;
-			}
-		}
-	}
 
 	isPreview = false;
 
@@ -537,7 +526,7 @@ void DirectShowCamera::ShowCameraData() {
 }
 
 void DirectShowCamera::setHistIndex(const int hist, const int width, const int height) {
-	histIndex = hist;
+	histIndex = DP_NUMBER > hist ? hist : DP_NUMBER - 1;
 	histW = width;
 	histH = height;
 }
@@ -582,6 +571,8 @@ void DirectShowCamera::RBSubView() {
 }
 
 void DirectShowCamera::Cloud3D(int width, int height, uchar* pic, int rx, int ry) {
+	const int valzSize = 9;
+	const int gap = maxValue / valzSize;
 	mglGraph gr(0, width, height);
 	gr.ClearFrame();
 
@@ -590,19 +581,28 @@ void DirectShowCamera::Cloud3D(int width, int height, uchar* pic, int rx, int ry
 	gr.Label('x', "X", 0);
 	gr.Label('y', "Y", 0);
 	gr.Label('z', "Z", 1);
-	gr.SetRanges(0, 25, 0, 25, 0, 2250);
+	gr.SetRanges(0, 25, 0, 25, 0, maxValue);
 	gr.Dots(x, y, z, "0.3");
 
-	double valz[] = { 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250 };
-	gr.SetTicksVal('z', mglData(9, valz), "250\n500\n750\n1000\n1250\n1500\n1750\n2000\n2250");
+	double valz[valzSize];
+	std::ostringstream oss;
+	for (int i = 1; i <= valzSize; i++) {
+		valz[i] = gap * i;
+		oss << valz[i];
+		if (i != valzSize) {
+			oss << "\\n";  // MathGL 使用 '\n' 做換行
+		}
+	}
+	std::string valzStr = oss.str();
+	gr.SetTicksVal('z', mglData(valzSize, valz), valzStr.c_str());
 
-	double valx[] = { 0, 5, 10, 15 , 20 ,25 };
+	double valx[] = { 0, 5, 10, 15, 20, 25 };
 	gr.SetTicksVal('x', mglData(6, valx), "0\n5\n10\n15\n20");
-	double valy[] = { 0, 5, 10, 15 , 20 ,25 };
+	double valy[] = { 0, 5, 10, 15, 20, 25 };
 	gr.SetTicksVal('y', mglData(6, valy), "0\n5\n10\n15\n20\n25");
 
-	gr.SetRange('c', 0, 2250);
-	gr.SetTicksVal('c', mglData(9, valz), "250\n500\n750\n1000\n1250\n1500\n1750\n2000\n2250");
+	gr.SetRange('c', 0, maxValue);
+	gr.SetTicksVal('c', mglData(valzSize, valz), valzStr.c_str());
 	gr.Colorbar("0123456789", 0.98, -0.3, 0.5, 1.7);
 
 	gr.Axis();
@@ -657,19 +657,30 @@ void DirectShowCamera::Histgram(int width, int height, uchar* pic, const int his
 }
 
 void DirectShowCamera::Cloud2D(int width, int height, uchar* pic) {
+	const int valzSize = 9;
+	const int gap = maxValue / valzSize;
 	mglGraph gr(0, width, height);
 	gr.ClearFrame();
-	double valz[] = { 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250 };
+	double valz[valzSize];
+	std::ostringstream oss;
+	for (int i = 1; i <= valzSize; i++) {
+		valz[i] = gap * i;
+		oss << valz[i];
+		if (i != valzSize) {
+			oss << "\\n";  // MathGL 使用 '\n' 做換行
+		}
+	}
+	std::string valzStr = oss.str();
 
 	gr.Title("2D Image", "", -1.4);
 	gr.MultiPlot(17, 17, 18, 13, 14, " ");
-	gr.SetRange('c', 0, 2250);
-	gr.SetTicksVal('c', mglData(9, valz), "250\n500\n750\n1000\n1250\n1500\n1750\n2000\n2250");
+	gr.SetRange('c', 0, maxValue);
+	gr.SetTicksVal('c', mglData(valzSize, valz), valzStr.c_str());
 	gr.Colorbar("0123456789", 0.95, -0.05, 0.5, 1.13);
 	gr.Label('x', "X", 0);
 	gr.Label('y', "Y", 0);
 
-	gr.SetRanges(-1, 24, -1, 24, 0, 2550);
+	gr.SetRanges(-1, 24, -1, 24, 0, maxValue);
 	gr.Dots(x, y, z, "0.3");
 	gr.Box();
 	gr.Axis();
@@ -681,15 +692,26 @@ void DirectShowCamera::Cloud2D(int width, int height, uchar* pic) {
 }
 
 void DirectShowCamera::Filter2D(int width, int height, uchar* pic, int low_threadhold, int hightthreadhold) {
+	const int valzSize = 9;
+	const int gap = maxValue / valzSize;
 	mglGraph gr(0, width, height);
 	gr.ClearFrame();
 	int i = 0;
-	double valz[] = { 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250 };
+	double valz[valzSize];
+	std::ostringstream oss;
+	for (int i = 1; i <= valzSize; i++) {
+		valz[i] = gap * i;
+		oss << valz[i];
+		if (i != valzSize) {
+			oss << "\\n";  // MathGL 使用 '\n' 做換行
+		}
+	}
+	std::string valzStr = oss.str();
 
 	gr.Title("Filter 2D Image", "", -1.4);
 	gr.MultiPlot(17, 17, 18, 13, 14, " ");
-	gr.SetRange('c', 0, 2250);
-	gr.SetTicksVal('c', mglData(9, valz), "250\n500\n750\n1000\n1250\n1500\n1750\n2000\n2250");
+	gr.SetRange('c', 0, maxValue);
+	gr.SetTicksVal('c', mglData(valzSize, valz), valzStr.c_str());
 	gr.Colorbar("0123456789", 0.95, -0.05, 0.5, 1.13);
 	gr.Label('x', "X", 0);
 	gr.Label('y', "Y", 0);
@@ -699,7 +721,7 @@ void DirectShowCamera::Filter2D(int width, int height, uchar* pic, int low_threa
 			z.a[i] = -500;
 	}
 
-	gr.SetRanges(-1, 24, -1, 24, 0, 2550);
+	gr.SetRanges(-1, 24, -1, 24, 0, maxValue);
 	gr.Dots(x, y, z, "0.3");
 	gr.Box();
 	gr.Axis();

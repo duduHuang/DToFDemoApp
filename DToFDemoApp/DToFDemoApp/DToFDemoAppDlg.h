@@ -42,6 +42,7 @@ public:
 	afx_msg void OnBnClickedCancel();
 	afx_msg void OnBnClickedButtonSetText();
 	afx_msg void OnBnClickedSetMaxValue();
+	afx_msg void OnBnClickedSetPointXY();
 
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
@@ -51,10 +52,10 @@ public:
 	afx_msg void OnHScroll(NMHDR* pNMHDR, LRESULT* pResult);
 
 private:
-	const int defaultFileCount = 30, defaultMaxValue = 1000;
+	const int defaultFileCount = 30, defaultThreshold = 1000;
 	CListBox m_deviceListBox;
 	CSliderCtrl m_sliderThreshold;
-	CEdit m_editControl, m_maxEditControl;
+	CEdit m_editControl, m_maxEditControl, m_pointXEditControl, m_pointYEditControl;
 	CStatic m_thresholdText;
 	HCURSOR defaultCursor;
 	int startX = 0, startY = 0, rotatX = 40, rotatY = 50;

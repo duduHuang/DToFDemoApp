@@ -27,8 +27,6 @@
 #define HISTO_NUMBER 144
 #define RANGING_MODE_WIDTH 672
 #define RANGING_MODE_HEIGHT 600
-#define INDEX_START_X 92
-#define INDEX_START_Y 644
 
 struct WriteFileThreadParams {
 	int fileCount;
