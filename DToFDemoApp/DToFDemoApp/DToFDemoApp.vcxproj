@@ -188,6 +188,8 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BaseDirectShowCamera.h" />
+    <ClInclude Include="BaseSampleGrabberCB.h" />
     <ClInclude Include="DirectShowCamera.h" />
     <ClInclude Include="DToFDemoApp.h" />
     <ClInclude Include="DToFDemoAppDlg.h" />
@@ -198,6 +200,8 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BaseDirectShowCamera.cpp" />
+	<ClCompile Include="BaseSampleGrabberCB.cpp" />
     <ClCompile Include="DirectShowCamera.cpp" />
     <ClCompile Include="DToFDemoApp.cpp" />
     <ClCompile Include="DToFDemoAppDlg.cpp" />

@@ -307,7 +307,7 @@ HCURSOR CDToFDemoAppDlg::OnQueryDragIcon()
 }
 
 void CDToFDemoAppDlg::OnBnClickedPreview() {
-	const char* dToFDeviceName = "CX3-UVC", * rgbDeviceName = "USB Camera";
+	const std::string dToFDeviceName = "CX3-UVC", rgbDeviceName = "USB Camera";
 	std::vector<std::string> list;
 	int deviceCount = directShowCamera->listDevices(list);
 	for (int i = 0; i < deviceCount; ++i) {
@@ -374,11 +374,11 @@ void CDToFDemoAppDlg::OnBnClickedSetPointXY() {
 	CString inputTextX, inputTextY;
 	m_pointXEditControl.GetWindowTextW(inputTextX);
 	m_pointYEditControl.GetWindowTextW(inputTextY);
-	if (!inputTextX.IsEmpty() && !inputTextY.IsEmpty()) {
-		int index = _ttoi(inputTextX) + _ttoi(inputTextY) * 24;
-		GetDlgItem(IDC_PIC1)->GetWindowRect(&m_rect);
-		directShowCamera->setHistIndex(index, m_rect.right - m_rect.left, m_rect.bottom - m_rect.top);
-	}
+	int x = (!inputTextX.IsEmpty()) ? _ttoi(inputTextX) : -1;
+	int y = (!inputTextY.IsEmpty()) ? _ttoi(inputTextY) : -1;
+	int index = (0 < x && 0 < y) ? index = x + y * 24 : -1;
+	GetDlgItem(IDC_PIC1)->GetWindowRect(&m_rect);
+	directShowCamera->setHistIndex(index, m_rect.right - m_rect.left, m_rect.bottom - m_rect.top);
 }
 
 BOOL CDToFDemoAppDlg::TrayMessage(DWORD dwMessage) {

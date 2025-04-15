@@ -39,6 +39,12 @@
     <ClInclude Include="qedit.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
+    <ClInclude Include="BaseDirectShowCamera.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSampleGrabberCB.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DToFDemoApp.cpp">
@@ -53,6 +59,9 @@
     <ClCompile Include="DirectShowCamera.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
+    <ClCompile Include="BaseSampleGrabberCB.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DToFDemoApp.rc">
@@ -62,6 +71,9 @@
   <ItemGroup>
     <None Include="res\DToFDemoApp.rc2">
       <Filter>資源檔</Filter>
+    </None>
+    <None Include="BaseDirectShowCamera.cpp">
+      <Filter>來源檔案</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
