@@ -63,6 +63,7 @@ pLTDC(nullptr), pRTDC(nullptr), pLBDC(nullptr), pRBDC(nullptr) {
 	std::fill(newarray, newarray + DP_NUMBER, 0);
 
 	isPreview = false;
+	isSpeedUp = false;
 
 	x = mglData(DP_NUMBER);
 	y = mglData(DP_NUMBER);
@@ -147,7 +148,7 @@ void DirectShowCamera::run() {
 
 void DirectShowCamera::stop() {
 	isPreview = false;
-	// °±¤î°õ¦æºü
+	// °±¤î°õ¦æºü.
 	if (m_pThread) {
 		// µ¥«Ý°õ¦æºüµ²§ô
 		WaitForSingleObject(m_pThread->m_hThread, INFINITE);
@@ -175,9 +176,11 @@ void DirectShowCamera::ShowCameraData() {
 					cnt++;
 				}
 			}
-			LTSubView();
-			RTSubView();
-			LBSubView();
+			if (!isSpeedUp) {
+				LTSubView();
+				RTSubView();
+				LBSubView();
+			}
 			RBSubView();
 			grabberCallback.setIsNotFull();
 			std::cout << "show camera...\n";
@@ -451,9 +454,11 @@ void DirectShowCamera::ParseOneLine() {
 	const int bank_order[] = { 0, 12, 1, 13, 4, 16, 5, 17, 8, 20, 9, 21, 2, 14, 3, 15, 6, 18, 7, 19, 10, 22, 11, 23 };
 
 	for (int i = 0; i < RANGING_MODE_HEIGHT; i++) {
-		if ((i % ROWS_PER_BANK) > 1) {
-			ExtractBin(i, scnt);
-			scnt++;
+		if (!isSpeedUp) {
+			if ((i % ROWS_PER_BANK) > 1) {
+				ExtractBin(i, scnt);
+				scnt++;
+			}
 		}
 
 		if ((i % ROWS_PER_BANK) >= 2) {
@@ -502,6 +507,14 @@ void DirectShowCamera::writeFile(const int fileCount) {
 			}
 		}
 	}
+}
+
+void DirectShowCamera::setSpeedUp() {
+	isSpeedUp = true;
+}
+
+void DirectShowCamera::setDefaultSpeed() {
+	isSpeedUp = false;
 }
 
 void DirectShowCamera::subView(CDC* pDC, uchar* data, int width, int height) {

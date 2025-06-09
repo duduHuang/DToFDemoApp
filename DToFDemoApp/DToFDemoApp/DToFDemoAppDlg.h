@@ -43,6 +43,7 @@ public:
 	afx_msg void OnBnClickedButtonSetText();
 	afx_msg void OnBnClickedSetMaxValue();
 	afx_msg void OnBnClickedSetPointXY();
+	afx_msg void OnBnClickedSpeedUp();
 
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
@@ -67,5 +68,6 @@ private:
 	void DisplaySubView();
 	int Get2DPos(POINT srcpt, POINT* pt576);
 	void UpdateSliderValue(int value);
+	void MoveMouseTo(int x, int y);
 
 };

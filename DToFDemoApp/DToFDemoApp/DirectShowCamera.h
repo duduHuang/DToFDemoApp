@@ -46,6 +46,8 @@ public:
 	void ParseOneLine();
 
 	void writeFile(const int fileCount);
+	void setSpeedUp();
+	void setDefaultSpeed();
 
 	volatile bool isPreview;
 
@@ -61,5 +63,6 @@ private:
 	POINT* histpoints;
 	HCURSOR defaultcursor;
 	mglData x, y, z;
+	bool isSpeedUp;
 	int rotatx = 40, rotaty = 50, histIndex = -1, histW = 0, histH = 0, cloud3dW = 0, cloud3dH = 0, filterThreshold = 1000, maxValue = 2250;
 };

@@ -79,6 +79,7 @@ BEGIN_MESSAGE_MAP(CDToFDemoAppDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_EDITBTN, &CDToFDemoAppDlg::OnBnClickedButtonSetText)
 	ON_BN_CLICKED(IDC_MAXBTN, &CDToFDemoAppDlg::OnBnClickedSetMaxValue)
 	ON_BN_CLICKED(IDC_POINTBTN, &CDToFDemoAppDlg::OnBnClickedSetPointXY)
+	ON_BN_CLICKED(IDC_SPEEDBTN, &CDToFDemoAppDlg::OnBnClickedSpeedUp)
 
 	ON_WM_MOUSEMOVE()
 	ON_WM_SETCURSOR()
@@ -124,8 +125,8 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	// TODO: 在此加入額外的初始設定
 	directShowCamera = new DirectShowCamera[2];
 
-	int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-	int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+	int screenWidth = 1920;//GetSystemMetrics(SM_CXSCREEN);
+	int screenHeight = 1080;// GetSystemMetrics(SM_CYSCREEN);
 	int width = screenWidth * 0.8;
 	int height = screenHeight * 0.8;
 	int posX = (screenWidth - width) / 2;
@@ -183,6 +184,10 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	GetDlgItem(IDC_XTEXT)->SetWindowPos(GetParent(), width * 0.92, height * 0.52 + 5, 10, 20, SWP_SHOWWINDOW);
 	GetDlgItem(IDC_YTEXT)->SetWindowPos(GetParent(), width * 0.92 + 40, height * 0.52 + 5, 10, 20, SWP_SHOWWINDOW);
 
+	GetDlgItem(IDC_SPEEDBTN)->GetWindowRect(&rect);
+	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
+	GetDlgItem(IDC_SPEEDBTN)->SetWindowPos(GetParent(), width * 0.92, height * 0.45, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+
 	m_sliderThreshold.SetRange(0, 7500);
 	m_sliderThreshold.SetTicFreq(500);
 	m_sliderThreshold.SetPos(defaultThreshold);
@@ -193,7 +198,7 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	UINT controlIDs[] = {
 		IDC_PIC, IDC_PIC1, IDC_PIC2, IDC_PIC3,
 		IDC_PREBTN, IDCANCEL, IDC_EDIT1, IDC_EDIT2, IDC_EDIT3, IDC_EDIT4, IDC_EDITBTN, IDC_MAXBTN, IDC_POINTBTN,
-		IDC_LIST2, IDC_SLIDER1, IDC_THRESHOLDTEXT, IDC_XTEXT, IDC_YTEXT
+		IDC_LIST2, IDC_SLIDER1, IDC_THRESHOLDTEXT, IDC_XTEXT, IDC_YTEXT, IDC_SPEEDBTN
 	};
 	for (UINT id : controlIDs) {
 		GetDlgItem(id)->GetWindowRect(rect);
@@ -308,6 +313,7 @@ HCURSOR CDToFDemoAppDlg::OnQueryDragIcon()
 
 void CDToFDemoAppDlg::OnBnClickedPreview() {
 	const std::string dToFDeviceName = "CX3-UVC", rgbDeviceName = "USB Camera";
+	const int testX = 500, testY = 500;
 	std::vector<std::string> list;
 	int deviceCount = directShowCamera->listDevices(list);
 	for (int i = 0; i < deviceCount; ++i) {
@@ -324,6 +330,7 @@ void CDToFDemoAppDlg::OnBnClickedPreview() {
 	directShowCamera[1].prepareCamera();
 	directShowCamera[1].run();*/
 	MSG msg;
+	MoveMouseTo(testX, testY);
 	while (directShowCamera->isPreview) {
 		if (GetMessage(&msg, nullptr, 0, 0) > 0) {
 			if (msg.message == WM_KEYDOWN && msg.wParam == VK_RETURN) {
@@ -379,6 +386,20 @@ void CDToFDemoAppDlg::OnBnClickedSetPointXY() {
 	int index = (0 < x && 0 < y) ? index = x + y * 24 : -1;
 	GetDlgItem(IDC_PIC1)->GetWindowRect(&m_rect);
 	directShowCamera->setHistIndex(index, m_rect.right - m_rect.left, m_rect.bottom - m_rect.top);
+}
+
+void CDToFDemoAppDlg::OnBnClickedSpeedUp() {
+	const CString cstr[] = { _T("DefaultSpeed"), _T("SpeedUp") };
+	CString cs;
+	GetDlgItem(IDC_SPEEDBTN)->GetWindowText(cs);
+	if (cs == cstr[0]) {
+		GetDlgItem(IDC_SPEEDBTN)->SetWindowText(cstr[1]);
+		directShowCamera->setSpeedUp();
+	}
+	else {
+		GetDlgItem(IDC_SPEEDBTN)->SetWindowText(cstr[0]);
+		directShowCamera->setDefaultSpeed();
+	}
 }
 
 BOOL CDToFDemoAppDlg::TrayMessage(DWORD dwMessage) {
@@ -557,4 +578,21 @@ void CDToFDemoAppDlg::UpdateSliderValue(int value) {
 	strValue.Format(_T("%d"), value);
 	m_thresholdText.SetWindowText(strValue);
 	directShowCamera->setFilterThreshold(value);
+}
+
+void CDToFDemoAppDlg::MoveMouseTo(int x, int y) {
+	int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+	int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
+	// 轉換為絕對座標（0~65535）
+	int dx = (x * 65535) / screenWidth;
+	int dy = (y * 65535) / screenHeight;
+
+	INPUT input = { 0 };
+	input.type = INPUT_MOUSE;
+	input.mi.dx = dx;
+	input.mi.dy = dy;
+	input.mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
+
+	SendInput(1, &input, sizeof(INPUT));
 }
