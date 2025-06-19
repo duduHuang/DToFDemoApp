@@ -2,6 +2,7 @@
 #include "DirectShowCamera.h"
 
 extern std::queue<std::vector<BYTE>> frameQueue;
+std::queue<std::vector<float>> pointCloudQueue;
 
 UINT ShowWindowRealTimeImage(LPVOID pParam) {
 	DirectShowCamera* pThis = static_cast<DirectShowCamera*>(pParam);
@@ -9,36 +10,50 @@ UINT ShowWindowRealTimeImage(LPVOID pParam) {
 	return 0;
 }
 
-UINT WriteFileProcess(LPVOID pParam) {
-	WriteFileThreadParams* params = static_cast<WriteFileThreadParams*>(pParam);
-	char fileName[MAX_PATH];
-	int i = 0;
-	while (true) {
-		std::vector<BYTE> frameData;
-		if (!frameQueue.empty()) {
-			frameData = frameQueue.front();
-			frameQueue.pop();
+template<typename T>
+void writeProcess(char* fileName, std::queue<std::vector<T>> dataQueue) {
+	std::vector<T> data;
+	if (!dataQueue.empty()) {
+		data = dataQueue.front();
+		dataQueue.pop();
+	}
+	if (!data.empty()) {
+		std::ofstream writeFile(fileName, std::ios::out);
+		int count = 0;
+		if (DP_NUMBER * 3 == data.size()) {
+			for (long j = 0; j + 2 < data.size(); j += 3) {
+				writeFile << data.at(j) << " " << data.at(j + 1) << " " << data.at(j + 2) << "\n";
+			}
 		}
-		if (!frameData.empty()) {
-			sprintf(fileName, params->filePath + "\\outFile%d.csv", i++);
-			std::ofstream writeFile(fileName, std::ios::out);
-			int count = 0;
-			for (long j = 0; j < frameData.size(); j++) {
-				writeFile << (int)frameData.at(j);
+		else {
+			for (long j = 0; j < data.size(); j++) {
+				writeFile << (int)data.at(j);
 				count++;
 				if (RANGING_MODE_WIDTH == count) {
 					writeFile << "\n";
 					count = 0;
 				}
-				else if (i < frameData.size() - 1) {
+				else if (j < data.size() - 1) {
 					writeFile << ",";
 				}
 			}
-			writeFile << std::endl;
-			writeFile.close();
-			if (params->fileCount == i) {
-				break;
-			}
+		}
+		writeFile << std::endl;
+		writeFile.close();
+	}
+}
+
+UINT WriteFileProcess(LPVOID pParam) {
+	WriteFileThreadParams* params = static_cast<WriteFileThreadParams*>(pParam);
+	char fileName[MAX_PATH];
+	int i = 0;
+	while (true) {
+		sprintf(fileName, params->filePath + "\\outFile%d.csv", i);	
+		writeProcess(fileName, frameQueue);
+		sprintf(fileName, params->filePath + "\\pointCloudFile%d.xyz", i++);
+		writeProcess(fileName, pointCloudQueue);
+		if (params->fileCount == i) {
+			break;
 		}
 		std::cout << "write camera data...\n";
 	}
@@ -58,6 +73,7 @@ pLTDC(nullptr), pRTDC(nullptr), pLBDC(nullptr), pRBDC(nullptr) {
 	peak_z = new int[DP_NUMBER];
 	newarray = new int[DP_NUMBER];
 	histpoints = new POINT[DP_NUMBER];
+	pointCloud.resize(DP_NUMBER);
 
 	std::fill(peak_z, peak_z + DP_NUMBER, 0);
 	std::fill(newarray, newarray + DP_NUMBER, 0);
@@ -68,6 +84,9 @@ pLTDC(nullptr), pRTDC(nullptr), pLBDC(nullptr), pRBDC(nullptr) {
 	x = mglData(DP_NUMBER);
 	y = mglData(DP_NUMBER);
 	z = mglData(DP_NUMBER);
+	pointCloudX = mglData(DP_NUMBER);
+	pointCloudY = mglData(DP_NUMBER);
+	pointCloudZ = mglData(DP_NUMBER);
 }
 
 DirectShowCamera ::~DirectShowCamera() {
@@ -173,6 +192,9 @@ void DirectShowCamera::ShowCameraData() {
 					z.a[cnt] = newarray[cnt];
 					x.a[cnt] = i;
 					y.a[cnt] = j;
+					pointCloudX.a[i * SPOT_NUMBER + j] = pointCloud[i * SPOT_NUMBER + j][0];
+					pointCloudY.a[i * SPOT_NUMBER + j] = pointCloud[i * SPOT_NUMBER + j][1];
+					pointCloudZ.a[i * SPOT_NUMBER + j] = pointCloud[i * SPOT_NUMBER + j][2];
 					cnt++;
 				}
 			}
@@ -239,13 +261,13 @@ void DirectShowCamera::Cloud3D(int width, int height, uchar* pic, int rx, int ry
 	mglGraph gr(0, width, height);
 	gr.ClearFrame();
 
-	gr.Title("3D Image", "", -1.4);
+	gr.Title("point cloud", "", -1.4);
 	gr.Rotate(ry, rx);
 	gr.Label('x', "X", 0);
 	gr.Label('y', "Y", 0);
 	gr.Label('z', "Z", 1);
-	gr.SetRanges(0, 25, 0, 25, 0, maxValue);
-	gr.Dots(x, y, z, "0.3");
+	gr.SetRanges(-2500, 2500, -2500, 2500, 0, maxValue);
+	gr.Dots(pointCloudX, pointCloudY, pointCloudZ, "0.3");
 
 	double valz[valzSize];
 	std::ostringstream oss;
@@ -259,10 +281,9 @@ void DirectShowCamera::Cloud3D(int width, int height, uchar* pic, int rx, int ry
 	std::string valzStr = oss.str();
 	gr.SetTicksVal('z', mglData(valzSize, valz), valzStr.c_str());
 
-	double valx[] = { 0, 5, 10, 15, 20, 25 };
-	gr.SetTicksVal('x', mglData(6, valx), "0\n5\n10\n15\n20");
-	double valy[] = { 0, 5, 10, 15, 20, 25 };
-	gr.SetTicksVal('y', mglData(6, valy), "0\n5\n10\n15\n20\n25");
+	double valxy[] = { -2500, -1500, -500, 0, 500, 1500, 2500 };
+	gr.SetTicksVal('x', mglData(7, valxy), "-2500\n-1500\n-500\n0\n500\n1500\n2500");
+	gr.SetTicksVal('y', mglData(7, valxy), "-2500\n-1500\n-500\n0\n500\n1500\n2500");
 
 	gr.SetRange('c', 0, maxValue);
 	gr.SetTicksVal('c', mglData(valzSize, valz), valzStr.c_str());
@@ -449,7 +470,7 @@ void DirectShowCamera::fullframe_process(int rowIndex, int* ppickz) {
 }
 
 void DirectShowCamera::ParseOneLine() {
-	int scnt = 0, pickz_size = 0;
+	int scnt = 0, pickz_size = 0, pointCloudIndex = 0;
 	const int ROWS_PER_BANK = 50;
 	const int bank_order[] = { 0, 12, 1, 13, 4, 16, 5, 17, 8, 20, 9, 21, 2, 14, 3, 15, 6, 18, 7, 19, 10, 22, 11, 23 };
 
@@ -464,6 +485,21 @@ void DirectShowCamera::ParseOneLine() {
 		if ((i % ROWS_PER_BANK) >= 2) {
 			fullframe_process(i, &peak_z[pickz_size]);
 			pickz_size++;
+			pointCloud[pointCloudIndex] = {
+				US8littleToS192(&(cameraData[i][604])),
+				US8littleToS192(&(cameraData[i][608])),
+				US8littleToUS192(&(cameraData[i][612]))
+			};
+			pointCloudIndex++;
+			if (0 != pointCloudFileCount) {
+				std::vector<float> flat;
+				flat.reserve(DP_NUMBER * 3);
+				for (const auto& p : pointCloud) {
+					flat.insert(flat.end(), p.begin(), p.end());
+				}
+				pointCloudQueue.emplace(flat);
+				pointCloudFileCount--;
+			}
 		}
 	}
 
@@ -474,10 +510,29 @@ void DirectShowCamera::ParseOneLine() {
 	}
 }
 
+float::DirectShowCamera::US8littleToS192(uint8_t* bData) {
+	if (!bData) return 0xFFFFFFFF;
+	int32_t i32 = (bData[0] & 0xFF) + (bData[1] << 8) + ((bData[2] & 0x3F) << 16);
+
+	if (i32 > (0x01 << 21) - 1) {
+		return (i32 - (0x01 << 22)) / 4.0f;
+	}
+	else {
+		return i32 / 4.0f;
+	}
+}
+
+float::DirectShowCamera::US8littleToUS192(uint8_t* bData) {
+	if (!bData) return 0xFFFFFFFF;
+
+	return ((bData[0] & 0xFF) + (bData[1] << 8) + ((bData[2] & 0x3F) << 16)) / 4.0f;
+}
+
 void DirectShowCamera::writeFile(const int fileCount) {
 	if (deviceName != dToFDevice) {
 		return;
 	}
+	pointCloudFileCount = fileCount;
 	CComPtr<IFileDialog> pFolderDialog;
 	hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pFolderDialog));
 	if (SUCCEEDED(hr)) {

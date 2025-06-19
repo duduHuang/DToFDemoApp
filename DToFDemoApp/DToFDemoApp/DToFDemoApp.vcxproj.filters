@@ -62,6 +62,9 @@
     <ClCompile Include="BaseSampleGrabberCB.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
+    <ClCompile Include="BaseDirectShowCamera.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DToFDemoApp.rc">
@@ -71,9 +74,6 @@
   <ItemGroup>
     <None Include="res\DToFDemoApp.rc2">
       <Filter>資源檔</Filter>
-    </None>
-    <None Include="BaseDirectShowCamera.cpp">
-      <Filter>來源檔案</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

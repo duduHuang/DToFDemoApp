@@ -53,6 +53,8 @@ public:
 
 private:
 	void subView(CDC* pDC, uchar* data, int width, int height);
+	float US8littleToS192(uint8_t* bData);
+	float US8littleToUS192(uint8_t* bData);
 
 	int subViewWidth, subViewHeight;
 	CDC* pLTDC, * pRTDC, * pLBDC, * pRBDC;
@@ -60,9 +62,11 @@ private:
 	int** histarray;
 	int* peak_z;
 	int* newarray;
+	std::vector<std::array<float, 3>> pointCloud;
+	int pointCloudFileCount;
 	POINT* histpoints;
 	HCURSOR defaultcursor;
-	mglData x, y, z;
+	mglData x, y, z, pointCloudX, pointCloudY, pointCloudZ;
 	bool isSpeedUp;
 	int rotatx = 40, rotaty = 50, histIndex = -1, histW = 0, histH = 0, cloud3dW = 0, cloud3dH = 0, filterThreshold = 1000, maxValue = 2250;
 };

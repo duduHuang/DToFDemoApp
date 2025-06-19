@@ -85,7 +85,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>C:\Users\tedhuang\Documents\CypressCX3\DToFDemoApp\DToFDemoApp\DToFDemoApp\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\Users\88880546\Documents\CypressCX3\DToFDemoApp\DToFDemoApp\DToFDemoApp\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -166,15 +166,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\Users\tedhuang\Documents\CypressCX3\DToFDemoApp\DToFDemoApp\DToFDemoApp\include;C:\Users\tedhuang\Documents\CypressCX3\DToFDemoApp\DToFDemoApp\DToFDemoApp\mathgl_x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\88880546\Documents\CypressCX3\DToFDemoApp\DToFDemoApp\DToFDemoApp\include;C:\Users\88880546\Documents\CypressCX3\DToFDemoApp\DToFDemoApp\DToFDemoApp\mathgl_x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\Users\tedhuang\Documents\CypressCX3\DToFDemoApp\DToFDemoApp\DToFDemoApp\mathgl_x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_world454.lib;C:\Users\tedhuang\Documents\CypressCX3\DToFDemoApp\DToFDemoApp\DToFDemoApp\mathgl_x64-windows\lib\mgl.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\88880546\Documents\CypressCX3\DToFDemoApp\DToFDemoApp\DToFDemoApp\mathgl_x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencv_world454.lib;C:\Users\88880546\Documents\CypressCX3\DToFDemoApp\DToFDemoApp\DToFDemoApp\mathgl_x64-windows\lib\mgl.lib</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -201,7 +201,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseDirectShowCamera.cpp" />
-	<ClCompile Include="BaseSampleGrabberCB.cpp" />
+    <ClCompile Include="BaseSampleGrabberCB.cpp" />
     <ClCompile Include="DirectShowCamera.cpp" />
     <ClCompile Include="DToFDemoApp.cpp" />
     <ClCompile Include="DToFDemoAppDlg.cpp" />

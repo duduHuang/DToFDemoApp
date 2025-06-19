@@ -24,7 +24,7 @@ STDMETHODIMP BaseSampleGrabberCB::SampleCB(double SampleTime, IMediaSample* pSam
 	}
 
 	if (0 != fileCount) {
-		frameQueue.push(std::vector<BYTE>(pBuffer, pBuffer + size));
+		frameQueue.emplace(std::vector<BYTE>(pBuffer, pBuffer + size));
 		fileCount--;
 	}
 
