@@ -60,6 +60,10 @@ BaseDirectShowCamera::~BaseDirectShowCamera() {
 		pDevEnum.Release();
 		pDevEnum = nullptr;
 	}
+	if (pKsControl) {
+		pKsControl.Release();
+		pKsControl = nullptr;
+	}
 	CoUninitialize();
 	outFile.close();
 	if (nullptr != cameraData) {
@@ -279,6 +283,12 @@ void BaseDirectShowCamera::prepareCamera() {
 		return;
 	}
 
+	hr = pSourceFilter->QueryInterface(__uuidof(IKsControl), (void**)&pKsControl);
+	if (FAILED(hr) || !pKsControl) {
+		std::cerr << "IKsControl Failed: " << std::hex << hr << std::endl;
+		return;
+	}
+
 	// 開始運行圖表
 	hr = pGraph->QueryInterface(IID_PPV_ARGS(&pControl));
 	if (FAILED(hr)) {
@@ -306,4 +316,31 @@ void BaseDirectShowCamera::stop() {
 
 void BaseDirectShowCamera::ShowCameraData()
 {
+}
+
+void BaseDirectShowCamera::sendCx3Command(uint16_t reg, uint8_t data) {
+	ULONG cbReturned = 0;
+
+	KSP_NODE ksNode = {};
+	ksNode.Property.Set = CX3_XU_GUID;
+	ksNode.Property.Id = 0x03; // 對應 CX3 的控制 ID，例如 wValue
+	ksNode.Property.Flags = KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_TOPOLOGY;
+	ksNode.NodeId = 2;         // XU 的 Node ID（參考 UVC Descriptor）
+	ksNode.Reserved = 0;
+
+	// 傳送的 payload，根據韌體定義
+	UCHAR buffer[6] = { 0x00, 0x00, reg & 0xFF, (reg >> 8) & 0xFF, data & 0xFF, 0x00}; // 寫入Sensor寄存器範例
+
+	hr = pKsControl->KsProperty(
+		(PKSPROPERTY) & ksNode,
+		sizeof(KSP_NODE),
+		buffer,
+		sizeof(buffer),
+		&cbReturned);
+
+	if (FAILED(hr)) {
+		outFile << "KsProperty Failed: " << std::hex << hr << std::endl;
+	} else {
+		outFile << "Success. Bytes returned: " << cbReturned << std::endl;
+	}
 }

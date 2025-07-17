@@ -7,11 +7,18 @@
 #include <random>
 #include <iostream>
 #include <dshow.h>
+#include <ks.h>
+#include <ksproxy.h>
+#include <ksmedia.h>
+#include <initguid.h>
 #include <atlbase.h> // 使用 CComPtr 管理 COM 物件
 #pragma comment(lib, "strmiids.lib")  // DirectShow library
 #pragma comment(lib, "quartz.lib")
 
 #include "BaseSampleGrabberCB.h"
+
+DEFINE_GUID(CX3_XU_GUID,
+	0xE299E7A7, 0xA4D6, 0x4A31, 0xB9, 0xEF, 0xE8, 0x92, 0x0F, 0x2B, 0x72, 0x8E);
 
 class BaseDirectShowCamera {
 private:
@@ -26,6 +33,7 @@ public:
 	virtual void run();
 	virtual void stop();
 	virtual void ShowCameraData();
+	virtual void sendCx3Command(uint16_t reg, uint8_t data);
 
 protected:
     HRESULT hr;
@@ -39,6 +47,7 @@ protected:
 	CComPtr<IMoniker> pMoniker;
 	CComPtr<IBaseFilter> pRenderer;
 	CComPtr<IMediaControl> pControl;
+	CComPtr<IKsControl> pKsControl;
 	AM_MEDIA_TYPE mt;
 	BaseSampleGrabberCB grabberCallback;
 	std::ofstream outFile;

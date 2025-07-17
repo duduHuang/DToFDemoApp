@@ -48,6 +48,7 @@ public:
 	void writeFile(const int fileCount);
 	void setSpeedUp();
 	void setDefaultSpeed();
+	void sendCx3Command(uint16_t reg, uint8_t data);
 
 	volatile bool isPreview;
 

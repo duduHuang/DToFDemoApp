@@ -28,6 +28,12 @@
 #define IDC_YTEXT                       1020
 #define IDC_BUTTON1                     1021
 #define IDC_SPEEDBTN                    1021
+#define IDC_EDIT5                       1022
+#define IDC_REGTEXT                     1023
+#define IDC_EDIT6                       1024
+#define IDC_DATATEXT                    1025
+#define IDC_SPEEDBTN2                   1026
+#define IDC_TRANSFERBTN                 1026
 
 // Next default values for new objects
 // 

@@ -44,6 +44,7 @@ public:
 	afx_msg void OnBnClickedSetMaxValue();
 	afx_msg void OnBnClickedSetPointXY();
 	afx_msg void OnBnClickedSpeedUp();
+	afx_msg void OnStnClickedTransfer();
 
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
@@ -56,7 +57,7 @@ private:
 	const int defaultFileCount = 30, defaultThreshold = 1000;
 	CListBox m_deviceListBox;
 	CSliderCtrl m_sliderThreshold;
-	CEdit m_editControl, m_maxEditControl, m_pointXEditControl, m_pointYEditControl;
+	CEdit m_editControl, m_maxEditControl, m_pointXEditControl, m_pointYEditControl, m_RegEditControl, m_DataEditControl;
 	CStatic m_thresholdText;
 	HCURSOR defaultCursor;
 	int startX = 0, startY = 0, rotatX = 40, rotatY = 50;
@@ -69,5 +70,4 @@ private:
 	int Get2DPos(POINT srcpt, POINT* pt576);
 	void UpdateSliderValue(int value);
 	void MoveMouseTo(int x, int y);
-
 };

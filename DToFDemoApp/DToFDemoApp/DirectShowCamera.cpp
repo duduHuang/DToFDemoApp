@@ -572,6 +572,10 @@ void DirectShowCamera::setDefaultSpeed() {
 	isSpeedUp = false;
 }
 
+void DirectShowCamera::sendCx3Command(uint16_t reg, uint8_t data) {
+	BaseDirectShowCamera::sendCx3Command(reg, data);
+}
+
 void DirectShowCamera::subView(CDC* pDC, uchar* data, int width, int height) {
 	CRect dcrect(0, 0, width, height);
 	CDC memDC;

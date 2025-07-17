@@ -64,6 +64,8 @@ void CDToFDemoAppDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT2, m_maxEditControl);
 	DDX_Control(pDX, IDC_EDIT3, m_pointXEditControl);
 	DDX_Control(pDX, IDC_EDIT4, m_pointYEditControl);
+	DDX_Control(pDX, IDC_EDIT5, m_DataEditControl);
+	DDX_Control(pDX, IDC_EDIT6, m_RegEditControl);
 	DDX_Control(pDX, IDC_LIST2, m_deviceListBox); // 綁定控件變數
 	DDX_Control(pDX, IDC_SLIDER1, m_sliderThreshold);
 	DDX_Control(pDX, IDC_THRESHOLDTEXT, m_thresholdText);
@@ -80,6 +82,7 @@ BEGIN_MESSAGE_MAP(CDToFDemoAppDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_MAXBTN, &CDToFDemoAppDlg::OnBnClickedSetMaxValue)
 	ON_BN_CLICKED(IDC_POINTBTN, &CDToFDemoAppDlg::OnBnClickedSetPointXY)
 	ON_BN_CLICKED(IDC_SPEEDBTN, &CDToFDemoAppDlg::OnBnClickedSpeedUp)
+	ON_BN_CLICKED(IDC_TRANSFERBTN, &CDToFDemoAppDlg::OnStnClickedTransfer)
 
 	ON_WM_MOUSEMOVE()
 	ON_WM_SETCURSOR()
@@ -159,6 +162,14 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
 	GetDlgItem(IDC_EDIT4)->SetWindowPos(GetParent(), width * 0.92 + 50, height * 0.52, 25, rect.Height(), SWP_SHOWWINDOW);
 
+	GetDlgItem(IDC_EDIT5)->GetWindowRect(&rect);
+	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
+	GetDlgItem(IDC_EDIT5)->SetWindowPos(GetParent(), width * 0.92, height * 0.3, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+
+	GetDlgItem(IDC_EDIT6)->GetWindowRect(&rect);
+	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
+	GetDlgItem(IDC_EDIT6)->SetWindowPos(GetParent(), width * 0.92, height * 0.2, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+
 	GetDlgItem(IDC_EDITBTN)->GetWindowRect(&rect);
 	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
 	GetDlgItem(IDC_EDITBTN)->SetWindowPos(GetParent(), width * 0.92, height * 0.75, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
@@ -183,10 +194,16 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	GetDlgItem(IDC_THRESHOLDTEXT)->SetWindowPos(GetParent(), width * 0.8 + 10, height * 0.84 + 5, 30, 30, SWP_SHOWWINDOW);
 	GetDlgItem(IDC_XTEXT)->SetWindowPos(GetParent(), width * 0.92, height * 0.52 + 5, 10, 20, SWP_SHOWWINDOW);
 	GetDlgItem(IDC_YTEXT)->SetWindowPos(GetParent(), width * 0.92 + 40, height * 0.52 + 5, 10, 20, SWP_SHOWWINDOW);
+	GetDlgItem(IDC_REGTEXT)->SetWindowPos(GetParent(), width * 0.9, height * 0.2 + 5, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+	GetDlgItem(IDC_DATATEXT)->SetWindowPos(GetParent(), width * 0.9, height * 0.3 + 5, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
 
 	GetDlgItem(IDC_SPEEDBTN)->GetWindowRect(&rect);
 	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
 	GetDlgItem(IDC_SPEEDBTN)->SetWindowPos(GetParent(), width * 0.92, height * 0.45, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+
+	GetDlgItem(IDC_SPEEDBTN2)->GetWindowRect(&rect);
+	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
+	GetDlgItem(IDC_SPEEDBTN2)->SetWindowPos(GetParent(), width * 0.92, height * 0.4, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
 
 	m_sliderThreshold.SetRange(0, 7500);
 	m_sliderThreshold.SetTicFreq(500);
@@ -197,8 +214,8 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	GetClientRect(m_initClientRect);
 	UINT controlIDs[] = {
 		IDC_PIC, IDC_PIC1, IDC_PIC2, IDC_PIC3,
-		IDC_PREBTN, IDCANCEL, IDC_EDIT1, IDC_EDIT2, IDC_EDIT3, IDC_EDIT4, IDC_EDITBTN, IDC_MAXBTN, IDC_POINTBTN,
-		IDC_LIST2, IDC_SLIDER1, IDC_THRESHOLDTEXT, IDC_XTEXT, IDC_YTEXT, IDC_SPEEDBTN
+		IDC_PREBTN, IDCANCEL, IDC_EDIT1, IDC_EDIT2, IDC_EDIT3, IDC_EDIT4, IDC_EDIT5, IDC_EDIT6, IDC_EDITBTN, IDC_MAXBTN, IDC_POINTBTN,
+		IDC_LIST2, IDC_SLIDER1, IDC_THRESHOLDTEXT, IDC_XTEXT, IDC_YTEXT, IDC_REGTEXT, IDC_DATATEXT, IDC_SPEEDBTN, IDC_SPEEDBTN2
 	};
 	for (UINT id : controlIDs) {
 		GetDlgItem(id)->GetWindowRect(rect);
@@ -399,6 +416,19 @@ void CDToFDemoAppDlg::OnBnClickedSpeedUp() {
 	else {
 		GetDlgItem(IDC_SPEEDBTN)->SetWindowText(cstr[0]);
 		directShowCamera->setDefaultSpeed();
+	}
+}
+
+void CDToFDemoAppDlg::OnStnClickedTransfer() {
+	CString inputText, inText;
+
+	m_RegEditControl.GetWindowTextW(inputText);
+	m_DataEditControl.GetWindowTextW(inText);
+	if (!inputText.IsEmpty() && !inText.IsEmpty()) {
+		wchar_t* endPtr = nullptr;
+		uint16_t reg = (uint16_t)wcstol(inputText, &endPtr, 16);
+		uint8_t data = (uint8_t)wcstol(inText, &endPtr, 16);
+		directShowCamera->sendCx3Command(reg, data);
 	}
 }
 
