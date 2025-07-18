@@ -149,10 +149,12 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	GetDlgItem(IDC_EDIT1)->GetWindowRect(&rect);
 	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
 	GetDlgItem(IDC_EDIT1)->SetWindowPos(GetParent(), width * 0.92, height * 0.7, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+	GetDlgItem(IDC_FILE_COUNT_TEXT)->SetWindowPos(GetParent(), width * 0.92, height * 0.7 + 5, 20, 20, SWP_SHOWWINDOW);
 
 	GetDlgItem(IDC_EDIT2)->GetWindowRect(&rect);
 	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
 	GetDlgItem(IDC_EDIT2)->SetWindowPos(GetParent(), width * 0.92, height * 0.6, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+	GetDlgItem(IDC_FILTER_TEXT)->SetWindowPos(GetParent(), width * 0.92, height * 0.6 + 5, 15, 20, SWP_SHOWWINDOW);
 
 	GetDlgItem(IDC_EDIT3)->GetWindowRect(&rect);
 	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
@@ -201,9 +203,9 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
 	GetDlgItem(IDC_SPEEDBTN)->SetWindowPos(GetParent(), width * 0.92, height * 0.45, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
 
-	GetDlgItem(IDC_SPEEDBTN2)->GetWindowRect(&rect);
+	GetDlgItem(IDC_TRANSFERBTN)->GetWindowRect(&rect);
 	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
-	GetDlgItem(IDC_SPEEDBTN2)->SetWindowPos(GetParent(), width * 0.92, height * 0.4, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+	GetDlgItem(IDC_TRANSFERBTN)->SetWindowPos(GetParent(), width * 0.92, height * 0.4, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
 
 	m_sliderThreshold.SetRange(0, 7500);
 	m_sliderThreshold.SetTicFreq(500);
@@ -215,7 +217,8 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	UINT controlIDs[] = {
 		IDC_PIC, IDC_PIC1, IDC_PIC2, IDC_PIC3,
 		IDC_PREBTN, IDCANCEL, IDC_EDIT1, IDC_EDIT2, IDC_EDIT3, IDC_EDIT4, IDC_EDIT5, IDC_EDIT6, IDC_EDITBTN, IDC_MAXBTN, IDC_POINTBTN,
-		IDC_LIST2, IDC_SLIDER1, IDC_THRESHOLDTEXT, IDC_XTEXT, IDC_YTEXT, IDC_REGTEXT, IDC_DATATEXT, IDC_SPEEDBTN, IDC_SPEEDBTN2
+		IDC_LIST2, IDC_SLIDER1, IDC_THRESHOLDTEXT, IDC_XTEXT, IDC_YTEXT, IDC_REGTEXT, IDC_DATATEXT, IDC_SPEEDBTN, IDC_TRANSFERBTN,
+		IDC_FILE_COUNT_TEXT, IDC_FILTER_TEXT
 	};
 	for (UINT id : controlIDs) {
 		GetDlgItem(id)->GetWindowRect(rect);
