@@ -320,7 +320,6 @@ void BaseDirectShowCamera::ShowCameraData()
 
 void BaseDirectShowCamera::sendCx3Command(uint16_t reg, uint8_t data) {
 	ULONG cbReturned = 0;
-
 	KSP_NODE ksNode = {};
 	ksNode.Property.Set = CX3_XU_GUID;
 	ksNode.Property.Id = 0x03; // 對應 CX3 的控制 ID，例如 wValue
@@ -339,8 +338,37 @@ void BaseDirectShowCamera::sendCx3Command(uint16_t reg, uint8_t data) {
 		&cbReturned);
 
 	if (FAILED(hr)) {
-		outFile << "KsProperty Failed: " << std::hex << hr << std::endl;
+		outFile << "sendCx3Command: KsProperty Failed: " << std::hex << hr << std::endl;
 	} else {
-		outFile << "Success. Bytes returned: " << cbReturned << std::endl;
+		outFile << "sendCx3Command: Success. Bytes returned: " << cbReturned << std::endl;
 	}
+}
+
+ULONG BaseDirectShowCamera::getFWVersion(uint8_t* data) {
+	ULONG cbReturned = 0;
+	KSP_NODE ksNode = {};
+	ksNode.Property.Set = CX3_XU_GUID;
+	ksNode.Property.Id = 0x02;
+	ksNode.Property.Flags = KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_TOPOLOGY;
+	ksNode.NodeId = 2;         // XU 的 Node ID（參考 UVC Descriptor）
+	ksNode.Reserved = 0;
+	UCHAR fWVersion[32] = {};
+
+	hr = pKsControl->KsProperty(
+		(PKSPROPERTY)&ksNode,
+		sizeof(KSP_NODE),
+		fWVersion,
+		sizeof(fWVersion),
+		&cbReturned);
+
+	if (FAILED(hr)) {
+		outFile << "getFWVersion: KsProperty Failed: " << std::hex << hr << std::endl;
+	}
+	else {
+		outFile << "getFWVersion: Success. Bytes returned: " << cbReturned << std::endl;
+		memcpy(data, fWVersion, cbReturned);
+		std::string str((const char*)data);
+		outFile << "FW: " << str << std::endl;
+	}
+	return cbReturned;
 }

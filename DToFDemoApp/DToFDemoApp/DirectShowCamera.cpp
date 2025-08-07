@@ -24,16 +24,14 @@ void writeProcess(char* fileName, std::queue<std::vector<T>> dataQueue) {
 			for (long j = 0; j + 2 < data.size(); j += 3) {
 				writeFile << data.at(j) << " " << data.at(j + 1) << " " << data.at(j + 2) << "\n";
 			}
-		}
-		else {
+		} else {
 			for (long j = 0; j < data.size(); j++) {
 				writeFile << (int)data.at(j);
 				count++;
 				if (RANGING_MODE_WIDTH == count) {
 					writeFile << "\n";
 					count = 0;
-				}
-				else if (j < data.size() - 1) {
+				} else if (j < data.size() - 1) {
 					writeFile << ",";
 				}
 			}
@@ -63,7 +61,8 @@ UINT WriteFileProcess(LPVOID pParam) {
 }
 
 DirectShowCamera::DirectShowCamera(): m_pThread(nullptr), m_writeFileThread(nullptr),
-pLTDC(nullptr), pRTDC(nullptr), pLBDC(nullptr), pRBDC(nullptr) {
+pLTDC(nullptr), pRTDC(nullptr), pLBDC(nullptr), pRBDC(nullptr),
+subViewWidth(0), subViewHeight(0), pointCloudFileCount(0) {
 	histarray = new int*[DP_NUMBER];
 	for (int i = 0; i < DP_NUMBER; ++i) {
 		histarray[i] = new int[HISTO_NUMBER];
@@ -180,6 +179,84 @@ void DirectShowCamera::stop() {
 
 POINT* DirectShowCamera::getPoints() {
 	return histpoints;
+}
+
+double DirectShowCamera::getRMSE(const std::vector<std::array<float, 3>>& pointCloud) {
+	double sum_x = 0, sum_y = 0, sum_z = 0;
+	double sum_xx = 0, sum_yy = 0, sum_xy = 0;
+	double sum_xz = 0, sum_yz = 0;
+
+	for (const auto& p : pointCloud) {
+		double x = p[0], y = p[1], z = p[2];
+		sum_x += x;
+		sum_y += y;
+		sum_z += z;
+		sum_xx += x * x;
+		sum_yy += y * y;
+		sum_xy += x * y;
+		sum_xz += x * z;
+		sum_yz += y * z;
+	}
+
+	double A[3][3] = {
+		{ sum_xx, sum_xy, sum_x },
+		{ sum_xy, sum_yy, sum_y },
+		{ sum_x,  sum_y,  double(DP_NUMBER) }
+	};
+	double B[3] = { sum_xz, sum_yz, sum_z };
+
+	for (int i = 0; i < 3; ++i) {
+		// pivot row
+		int maxRow = i;
+		for (int k = i + 1; k < 3; ++k)
+			if (std::abs(A[k][i]) > std::abs(A[maxRow][i]))
+				maxRow = k;
+
+		// 換行
+		for (int k = 0; k < 3; ++k) std::swap(A[i][k], A[maxRow][k]);
+		std::swap(B[i], B[maxRow]);
+
+		// 消去
+		for (int k = i + 1; k < 3; ++k) {
+			double factor = A[k][i] / A[i][i];
+			for (int j = i; j < 3; ++j) {
+				A[k][j] -= A[i][j] * factor;
+			}
+			B[k] -= B[i] * factor;
+		}
+	}
+
+	// 回代
+	double x[3];
+	for (int i = 2; i >= 0; --i) {
+		x[i] = B[i];
+		for (int j = i + 1; j < 3; ++j) {
+			x[i] -= A[i][j] * x[j];
+		}
+		x[i] /= A[i][i];
+	}
+
+	float a = static_cast<float>(x[0]);
+	float b = static_cast<float>(x[1]);
+	float c = static_cast<float>(x[2]);
+
+	// 計算殘差與 RMSE
+	std::vector<float> distances(DP_NUMBER);
+	double sum_sq_error = 0.0;
+
+	for (size_t i = 0; i < DP_NUMBER; ++i) {
+		float px = pointCloud[i][0];
+		float py = pointCloud[i][1];
+		float pz = pointCloud[i][2];
+		float z_pred = a * px + b * py + c;
+		float dz = pz - z_pred;
+		distances[i] = std::abs(dz);
+		sum_sq_error += dz * dz;
+	}
+
+	double rmse = std::sqrt(sum_sq_error / DP_NUMBER);
+
+	return rmse;
 }
 
 void DirectShowCamera::ShowCameraData() {
@@ -574,6 +651,10 @@ void DirectShowCamera::setDefaultSpeed() {
 
 void DirectShowCamera::sendCx3Command(uint16_t reg, uint8_t data) {
 	BaseDirectShowCamera::sendCx3Command(reg, data);
+}
+
+ULONG DirectShowCamera::getFWVersion(uint8_t* data) {
+	return BaseDirectShowCamera::getFWVersion(data);
 }
 
 void DirectShowCamera::subView(CDC* pDC, uchar* data, int width, int height) {

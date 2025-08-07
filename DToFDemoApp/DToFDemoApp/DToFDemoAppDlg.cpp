@@ -8,11 +8,6 @@
 #include "DToFDemoAppDlg.h"
 #include "afxdialogex.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#endif
-
-
 // 對 App About 使用 CAboutDlg 對話方塊
 
 class CAboutDlg : public CDialogEx
@@ -66,7 +61,7 @@ void CDToFDemoAppDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT4, m_pointYEditControl);
 	DDX_Control(pDX, IDC_EDIT5, m_DataEditControl);
 	DDX_Control(pDX, IDC_EDIT6, m_RegEditControl);
-	DDX_Control(pDX, IDC_LIST2, m_deviceListBox); // 綁定控件變數
+	DDX_Control(pDX, IDC_LIST2, m_infoListBox); // 綁定控件變數
 	DDX_Control(pDX, IDC_SLIDER1, m_sliderThreshold);
 	DDX_Control(pDX, IDC_THRESHOLDTEXT, m_thresholdText);
 }
@@ -101,6 +96,7 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	CDialogEx::OnInitDialog();
 
 	// 將 [關於...] 功能表加入系統功能表。
+	SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
 	// IDM_ABOUTBOX 必須在系統命令範圍之中。
 	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
@@ -238,26 +234,36 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 
 	defaultCursor = GetCursor();
 
+	HDC hdc = ::GetDC(m_hWnd);
+	m_uOriginalDpi = GetDeviceCaps(hdc, LOGPIXELSX);
+	::ReleaseDC(m_hWnd, hdc);
+
+	// 初始化 FPS 計算
+	QueryPerformanceFrequency(&m_frequency);
+	QueryPerformanceCounter(&m_lastTime);
+	m_frameCount = 0;
+	m_fps = 0.0;
+
+	// 啟用定時器 (每 16ms 約 60FPS 更新一次)
+	SetTimer(1, 16, NULL);
+
 	return TRUE;  // 傳回 TRUE，除非您對控制項設定焦點
 }
 
 void CDToFDemoAppDlg::OnDestroy() {
 	if (nullptr != directShowCamera) {
-		delete directShowCamera;
+		delete[] directShowCamera;
 		directShowCamera = nullptr;
 	}
 	CDialogEx::OnDestroy();
+	KillTimer(1);
 }
 
-void CDToFDemoAppDlg::OnSysCommand(UINT nID, LPARAM lParam)
-{
-	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
-	{
+void CDToFDemoAppDlg::OnSysCommand(UINT nID, LPARAM lParam) {
+	if ((nID & 0xFFF0) == IDM_ABOUTBOX) {
 		CAboutDlg dlgAbout;
 		dlgAbout.DoModal();
-	}
-	else
-	{
+	} else {
 		CDialogEx::OnSysCommand(nID, lParam);
 	}
 }
@@ -266,10 +272,8 @@ void CDToFDemoAppDlg::OnSysCommand(UINT nID, LPARAM lParam)
 // 以便繪製圖示。對於使用文件/檢視模式的 MFC 應用程式，
 // 框架會自動完成此作業。
 
-void CDToFDemoAppDlg::OnPaint()
-{
-	if (IsIconic())
-	{
+void CDToFDemoAppDlg::OnPaint() {
+	if (IsIconic()) {
 		CPaintDC dc(this); // 繪製的裝置內容
 
 		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
@@ -284,9 +288,7 @@ void CDToFDemoAppDlg::OnPaint()
 
 		// 描繪圖示
 		dc.DrawIcon(x, y, m_hIcon);
-	}
-	else
-	{
+	} else {
 		CDialogEx::OnPaint();
 	}
 }
@@ -304,53 +306,113 @@ void CDToFDemoAppDlg::OnSize(UINT nType, int cx, int cy) {
 
 	for (const auto& [id, initRect] : m_controls) {
 		CRect rect;
-		rect.left = (int)(initRect.left * scaleX);
-		rect.top = (int)(initRect.top * scaleY);
-		rect.right = (int)(initRect.right * scaleX);
-		rect.bottom = (int)(initRect.bottom * scaleY);
-
+		if (IDC_PIC == id) {
+			rect.left = (int)(initRect.left);
+			rect.top = (int)(initRect.top);
+			rect.right = (int)(initRect.right * scaleX);
+			rect.bottom = (int)(initRect.bottom * scaleY);
+			directShowCamera->setSubViewWH(rect.Width(), rect.Height());
+			pLTSubView.top = rect.left;
+			pLTSubView.left = rect.top;
+			pLTSubView.bottom = rect.bottom;
+			pLTSubView.right = rect.right;
+		} else {
+			rect.left = (int)(initRect.left * scaleX);
+			rect.top = (int)(initRect.top * scaleY);
+			rect.right = (int)(initRect.right * scaleX);
+			rect.bottom = (int)(initRect.bottom * scaleY);
+		}
 		GetDlgItem(id)->MoveWindow(&rect);
 	}
-	pLTSubView.top = 0;
-	pLTSubView.left = 0;
-	pLTSubView.bottom = m_controls[IDC_PIC].bottom;
-	pLTSubView.right = m_controls[IDC_PIC].right;
 
 	/*pRTSubView.top = m_controls[IDC_PIC2].top;
 	pRTSubView.left = m_controls[IDC_PIC2].left;
 	pRTSubView.bottom = m_controls[IDC_PIC2].bottom;
 	pRTSubView.right = m_controls[IDC_PIC2].right;*/
 
-	directShowCamera->setSubViewWH(m_controls[IDC_PIC].Width(), m_controls[IDC_PIC].Height());
+}
+
+LRESULT CDToFDemoAppDlg::OnDpiChanged(WPARAM wParam, LPARAM lParam) {
+	UINT dpiX = LOWORD(wParam);
+	UINT dpiY = HIWORD(wParam);
+
+	// 取得新建議的視窗大小（矩形）
+	RECT* const prcNewWindow = (RECT*)lParam;
+
+	// 依新 DPI 調整視窗位置與大小
+	::SetWindowPos(m_hWnd, NULL,
+		prcNewWindow->left, prcNewWindow->top,
+		prcNewWindow->right - prcNewWindow->left,
+		prcNewWindow->bottom - prcNewWindow->top,
+		SWP_NOZORDER | SWP_NOACTIVATE);
+
+	// 若有用到 GDI 尺寸、UI、圖示等也需要重新計算比例
+	// 可加上 ReLayoutUI() 自訂重排邏輯
+	ReLayoutUI(dpiX);
+
+	return 0;
+}
+
+void CDToFDemoAppDlg::ReLayoutUI(UINT newDpi) {
+	float scale = (float)newDpi / (float)m_uOriginalDpi;
+
+	for (const auto& [id, initRect] : m_controls) {
+		HWND hCtrl = ::GetDlgItem(m_hWnd, id);
+		if (hCtrl) {
+			RECT rect;
+			::GetWindowRect(hCtrl, &rect);
+			::ScreenToClient(m_hWnd, (LPPOINT)&rect.left);
+			::ScreenToClient(m_hWnd, (LPPOINT)&rect.right);
+
+			int newLeft = int(rect.left * scale);
+			int newTop = int(rect.top * scale);
+			int newWidth = int((rect.right - rect.left) * scale);
+			int newHeight = int((rect.bottom - rect.top) * scale);
+
+			::SetWindowPos(hCtrl, NULL, newLeft, newTop, newWidth, newHeight, SWP_NOZORDER | SWP_NOACTIVATE);
+		}
+	}
+
+	// 更新字型大小
+	NONCLIENTMETRICS ncm = { sizeof(NONCLIENTMETRICS) };
+	if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0)) {
+		ncm.lfMessageFont.lfHeight = MulDiv(ncm.lfMessageFont.lfHeight, (int)newDpi, (int)m_uOriginalDpi);
+		HFONT hFont = CreateFontIndirect(&ncm.lfMessageFont);
+		for (const auto& [id, initRect] : m_controls) {
+			HWND hCtrl = ::GetDlgItem(m_hWnd, id);
+			if (hCtrl) {
+				::SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, TRUE);
+			}
+		}
+	}
 }
 
 // 當使用者拖曳最小化視窗時，
 // 系統呼叫這個功能取得游標顯示。
-HCURSOR CDToFDemoAppDlg::OnQueryDragIcon()
-{
+HCURSOR CDToFDemoAppDlg::OnQueryDragIcon() {
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
 void CDToFDemoAppDlg::OnBnClickedPreview() {
 	const std::string dToFDeviceName = "CX3-UVC", rgbDeviceName = "USB Camera";
-	const int testX = 500, testY = 500;
 	std::vector<std::string> list;
 	int deviceCount = directShowCamera->listDevices(list);
-	for (int i = 0; i < deviceCount; ++i) {
+	int i = 0;
+	for (i = 0; i < deviceCount; ++i) {
 		std::string str(list.at(i));
-		m_deviceListBox.InsertString(i, CString(str.c_str()));
+		m_infoListBox.InsertString(i, CString(str.c_str()));
 	}
-	m_deviceListBox.UpdateData(TRUE);
+	//m_infoListBox.UpdateData(TRUE);
 	SetSubView();
-	//DisplaySubView();
 	directShowCamera->openCamera(dToFDeviceName);
 	directShowCamera->prepareCamera();
 	directShowCamera->run();
+	int cbSize = directShowCamera->getFWVersion(fWVersion);
+	m_infoListBox.InsertString(i, CString(fWVersion));
 	/*directShowCamera[1].openCamera(rgbDeviceName);
 	directShowCamera[1].prepareCamera();
 	directShowCamera[1].run();*/
 	MSG msg;
-	MoveMouseTo(testX, testY);
 	while (directShowCamera->isPreview) {
 		if (GetMessage(&msg, nullptr, 0, 0) > 0) {
 			if (msg.message == WM_KEYDOWN && msg.wParam == VK_RETURN) {
@@ -451,6 +513,32 @@ BOOL CDToFDemoAppDlg::TrayMessage(DWORD dwMessage) {
 }
 
 void CDToFDemoAppDlg::OnTimer(UINT_PTR nIDEvent) {
+	if (1 == nIDEvent) {
+		m_frameCount++;
+
+		LARGE_INTEGER currentTime;
+		QueryPerformanceCounter(&currentTime);
+
+		double elapsed = static_cast<double>(currentTime.QuadPart - m_lastTime.QuadPart) / m_frequency.QuadPart;
+		if (1.0 <= elapsed) {
+			m_fps = m_frameCount / elapsed;
+
+			CString str;
+			int listSize = m_infoListBox.GetCount();
+			str.Format(_T("FPS: %.2f"), m_fps);
+			if (0 != listSize) {
+				m_infoListBox.DeleteString(listSize - 1);
+				m_infoListBox.InsertString(listSize - 1, str);
+			}
+			else {
+				m_infoListBox.InsertString(0, str);
+			}
+
+			// 重設
+			m_lastTime = currentTime;
+			m_frameCount = 0;
+		}
+	}
 	CDialogEx::OnTimer(nIDEvent);
 }
 
@@ -551,26 +639,26 @@ void CDToFDemoAppDlg::SetSubView() {
 	);
 }
 
-void CDToFDemoAppDlg::DisplaySubView() {
+void CDToFDemoAppDlg::DisplaySubView(int width, int height) {
 	GetDlgItem(IDC_PIC)->SetWindowPos(
 		GetParent(),
 		0, 0,
-		m_controls[IDC_PIC].Width(), m_controls[IDC_PIC].Height(),
+		width, height,
 		SWP_SHOWWINDOW);
 	GetDlgItem(IDC_PIC1)->SetWindowPos(
 		GetParent(),
-		m_controls[IDC_PIC1].Width() + 1, 0,
-		m_controls[IDC_PIC1].Width(), m_controls[IDC_PIC1].Height(),
+		width + 1, 0,
+		width, height,
 		SWP_SHOWWINDOW);
 	GetDlgItem(IDC_PIC2)->SetWindowPos(
 		GetParent(),
-		0, m_controls[IDC_PIC2].Height() + 1,
-		m_controls[IDC_PIC2].Width(), m_controls[IDC_PIC2].Height(),
+		0, height + 1,
+		width, height,
 		SWP_SHOWWINDOW);
 	GetDlgItem(IDC_PIC3)->SetWindowPos(
 		GetParent(),
-		m_controls[IDC_PIC3].Width() + 1, m_controls[IDC_PIC3].Height() + 1,
-		m_controls[IDC_PIC3].Width(), m_controls[IDC_PIC3].Height(),
+		width + 1, height + 1,
+		width, height,
 		SWP_SHOWWINDOW);
 }
 
@@ -628,4 +716,9 @@ void CDToFDemoAppDlg::MoveMouseTo(int x, int y) {
 	input.mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
 
 	SendInput(1, &input, sizeof(INPUT));
+}
+
+double CDToFDemoAppDlg::GetRMSE() {
+	//double rmse = directShowCamera->getRMSE();
+	return 0.0;
 }

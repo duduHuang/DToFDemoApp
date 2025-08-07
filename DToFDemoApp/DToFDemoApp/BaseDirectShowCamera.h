@@ -34,6 +34,7 @@ public:
 	virtual void stop();
 	virtual void ShowCameraData();
 	virtual void sendCx3Command(uint16_t reg, uint8_t data);
+	virtual ULONG getFWVersion(uint8_t* data);
 
 protected:
     HRESULT hr;

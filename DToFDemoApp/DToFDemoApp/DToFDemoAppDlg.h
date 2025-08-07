@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <cmath>
 #include "DirectShowCamera.h"
 
 #define MYWM_NOTIFYICON (WM_USER + 2)
@@ -34,6 +35,7 @@ protected:
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg LRESULT OnDpiChanged(WPARAM wParam, LPARAM lParam);
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
@@ -55,7 +57,8 @@ public:
 
 private:
 	const int defaultFileCount = 30, defaultThreshold = 1000;
-	CListBox m_deviceListBox;
+	UINT m_uOriginalDpi = 96; // 初始 DPI (預設 96)
+	CListBox m_infoListBox;
 	CSliderCtrl m_sliderThreshold;
 	CEdit m_editControl, m_maxEditControl, m_pointXEditControl, m_pointYEditControl, m_RegEditControl, m_DataEditControl;
 	CStatic m_thresholdText;
@@ -65,9 +68,17 @@ private:
 	bool cursorLTFlag = false, cursorRTFlag = false;
 	CRect m_initClientRect;         // 記錄視窗初始大小
 	std::map<UINT, CRect> m_controls;
+	LARGE_INTEGER m_frequency;
+	LARGE_INTEGER m_lastTime;
+	int m_frameCount = 0;
+	double m_fps = 0;
+	uint8_t fWVersion[32];
+
 	void SetSubView();
-	void DisplaySubView();
+	void DisplaySubView(int width, int height);
 	int Get2DPos(POINT srcpt, POINT* pt576);
 	void UpdateSliderValue(int value);
 	void MoveMouseTo(int x, int y);
+	void ReLayoutUI(UINT newDpi);
+	double GetRMSE();
 };

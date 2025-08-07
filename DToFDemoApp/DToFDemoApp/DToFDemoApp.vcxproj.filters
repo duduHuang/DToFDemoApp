@@ -84,4 +84,9 @@
       <Filter>資源檔</Filter>
     </Image>
   </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="app.manifest">
+      <Filter>資源檔</Filter>
+    </Manifest>
+  </ItemGroup>
 </Project>

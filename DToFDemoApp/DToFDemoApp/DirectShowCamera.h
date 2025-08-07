@@ -49,6 +49,8 @@ public:
 	void setSpeedUp();
 	void setDefaultSpeed();
 	void sendCx3Command(uint16_t reg, uint8_t data);
+	ULONG getFWVersion(uint8_t* data);
+	double getRMSE(const std::vector<std::array<float, 3>>& pointCloud);
 
 	volatile bool isPreview;
 
@@ -66,7 +68,6 @@ private:
 	std::vector<std::array<float, 3>> pointCloud;
 	int pointCloudFileCount;
 	POINT* histpoints;
-	HCURSOR defaultcursor;
 	mglData x, y, z, pointCloudX, pointCloudY, pointCloudZ;
 	bool isSpeedUp;
 	int rotatx = 40, rotaty = 50, histIndex = -1, histW = 0, histH = 0, cloud3dW = 0, cloud3dH = 0, filterThreshold = 1000, maxValue = 2250;
