@@ -522,10 +522,11 @@ void CDToFDemoAppDlg::OnTimer(UINT_PTR nIDEvent) {
 		double elapsed = static_cast<double>(currentTime.QuadPart - m_lastTime.QuadPart) / m_frequency.QuadPart;
 		if (1.0 <= elapsed) {
 			m_fps = m_frameCount / elapsed;
+			m_RMSE = GetRMSE();
 
 			CString str;
 			int listSize = m_infoListBox.GetCount();
-			str.Format(_T("FPS: %.2f"), m_fps);
+			str.Format(_T("FPS: %.2f, RMSE: %.3f"), m_fps, m_RMSE);
 			if (0 != listSize) {
 				m_infoListBox.DeleteString(listSize - 1);
 				m_infoListBox.InsertString(listSize - 1, str);
@@ -719,6 +720,5 @@ void CDToFDemoAppDlg::MoveMouseTo(int x, int y) {
 }
 
 double CDToFDemoAppDlg::GetRMSE() {
-	//double rmse = directShowCamera->getRMSE();
-	return 0.0;
+	return directShowCamera->getRMSE();
 }

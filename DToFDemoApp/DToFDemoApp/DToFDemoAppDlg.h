@@ -71,7 +71,7 @@ private:
 	LARGE_INTEGER m_frequency;
 	LARGE_INTEGER m_lastTime;
 	int m_frameCount = 0;
-	double m_fps = 0;
+	double m_fps = 0.0, m_RMSE = 0.0;
 	uint8_t fWVersion[32];
 
 	void SetSubView();

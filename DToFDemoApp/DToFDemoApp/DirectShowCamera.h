@@ -50,7 +50,7 @@ public:
 	void setDefaultSpeed();
 	void sendCx3Command(uint16_t reg, uint8_t data);
 	ULONG getFWVersion(uint8_t* data);
-	double getRMSE(const std::vector<std::array<float, 3>>& pointCloud);
+	double getRMSE();
 
 	volatile bool isPreview;
 
@@ -58,6 +58,7 @@ private:
 	void subView(CDC* pDC, uchar* data, int width, int height);
 	float US8littleToS192(uint8_t* bData);
 	float US8littleToUS192(uint8_t* bData);
+	void calculatorRMSE();
 
 	int subViewWidth, subViewHeight;
 	CDC* pLTDC, * pRTDC, * pLBDC, * pRBDC;
@@ -71,4 +72,5 @@ private:
 	mglData x, y, z, pointCloudX, pointCloudY, pointCloudZ;
 	bool isSpeedUp;
 	int rotatx = 40, rotaty = 50, histIndex = -1, histW = 0, histH = 0, cloud3dW = 0, cloud3dH = 0, filterThreshold = 1000, maxValue = 2250;
+	double rMSE = 0;
 };
