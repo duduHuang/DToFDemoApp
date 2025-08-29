@@ -83,6 +83,9 @@
     <Image Include="res\icon1.ico">
       <Filter>資源檔</Filter>
     </Image>
+    <Image Include="res\title.ico">
+      <Filter>資源檔</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="app.manifest">

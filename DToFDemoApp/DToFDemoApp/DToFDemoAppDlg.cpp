@@ -40,15 +40,12 @@ void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 END_MESSAGE_MAP()
 
-
 // CDToFDemoAppDlg 對話方塊
-
-
 
 CDToFDemoAppDlg::CDToFDemoAppDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_DTOFDEMOAPP_DIALOG, pParent), directShowCamera(nullptr)
 {
-	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	m_hIcon = AfxGetApp()->LoadIcon(IDI_ICON1);
 }
 
 void CDToFDemoAppDlg::DoDataExchange(CDataExchange* pDX)
@@ -69,6 +66,7 @@ void CDToFDemoAppDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CDToFDemoAppDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
+	ON_WM_CTLCOLOR()
 	ON_WM_SIZE()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_PREBTN, &CDToFDemoAppDlg::OnBnClickedPreview)
@@ -77,17 +75,16 @@ BEGIN_MESSAGE_MAP(CDToFDemoAppDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_MAXBTN, &CDToFDemoAppDlg::OnBnClickedSetMaxValue)
 	ON_BN_CLICKED(IDC_POINTBTN, &CDToFDemoAppDlg::OnBnClickedSetPointXY)
 	ON_BN_CLICKED(IDC_SPEEDBTN, &CDToFDemoAppDlg::OnBnClickedSpeedUp)
-	ON_BN_CLICKED(IDC_TRANSFERBTN, &CDToFDemoAppDlg::OnStnClickedTransfer)
+	ON_BN_CLICKED(IDC_TRANSFERBTN, &CDToFDemoAppDlg::OnBtnClickedTransfer)
+	ON_BN_CLICKED(IDC_SDBTN, &CDToFDemoAppDlg::OnBtnClickedSaveSD)
 
 	ON_WM_MOUSEMOVE()
 	ON_WM_SETCURSOR()
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
 	ON_WM_TIMER()
-	ON_WM_CTLCOLOR()
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLIDER1, &CDToFDemoAppDlg::OnHScroll)
 END_MESSAGE_MAP()
-
 
 // CDToFDemoAppDlg 訊息處理常式
 
@@ -188,6 +185,10 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
 	GetDlgItem(IDC_PREBTN)->SetWindowPos(GetParent(), width * 0.84, height * 0.8, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
 
+	GetDlgItem(IDC_SDBTN)->GetWindowRect(&rect);
+	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
+	GetDlgItem(IDC_SDBTN)->SetWindowPos(GetParent(), width * 0.8, height * 0.7, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+
 	GetDlgItem(IDC_SLIDER1)->SetWindowPos(GetParent(), 10, height * 0.84, width * 0.8, 30, SWP_SHOWWINDOW);
 	GetDlgItem(IDC_THRESHOLDTEXT)->SetWindowPos(GetParent(), width * 0.8 + 10, height * 0.84 + 5, 30, 30, SWP_SHOWWINDOW);
 	GetDlgItem(IDC_XTEXT)->SetWindowPos(GetParent(), width * 0.92, height * 0.52 + 5, 10, 20, SWP_SHOWWINDOW);
@@ -212,7 +213,7 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	GetClientRect(m_initClientRect);
 	UINT controlIDs[] = {
 		IDC_PIC, IDC_PIC1, IDC_PIC2, IDC_PIC3,
-		IDC_PREBTN, IDCANCEL, IDC_EDIT1, IDC_EDIT2, IDC_EDIT3, IDC_EDIT4, IDC_EDIT5, IDC_EDIT6, IDC_EDITBTN, IDC_MAXBTN, IDC_POINTBTN,
+		IDC_SDBTN, IDC_PREBTN, IDCANCEL, IDC_EDIT1, IDC_EDIT2, IDC_EDIT3, IDC_EDIT4, IDC_EDIT5, IDC_EDIT6, IDC_EDITBTN, IDC_MAXBTN, IDC_POINTBTN,
 		IDC_LIST2, IDC_SLIDER1, IDC_THRESHOLDTEXT, IDC_XTEXT, IDC_YTEXT, IDC_REGTEXT, IDC_DATATEXT, IDC_SPEEDBTN, IDC_TRANSFERBTN,
 		IDC_FILE_COUNT_TEXT, IDC_FILTER_TEXT
 	};
@@ -274,23 +275,34 @@ void CDToFDemoAppDlg::OnSysCommand(UINT nID, LPARAM lParam) {
 
 void CDToFDemoAppDlg::OnPaint() {
 	if (IsIconic()) {
-		CPaintDC dc(this); // 繪製的裝置內容
-
+		CPaintDC dc(this);
 		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
-
-		// 將圖示置中於用戶端矩形
 		int cxIcon = GetSystemMetrics(SM_CXICON);
 		int cyIcon = GetSystemMetrics(SM_CYICON);
 		CRect rect;
 		GetClientRect(&rect);
 		int x = (rect.Width() - cxIcon + 1) / 2;
 		int y = (rect.Height() - cyIcon + 1) / 2;
-
-		// 描繪圖示
 		dc.DrawIcon(x, y, m_hIcon);
 	} else {
 		CDialogEx::OnPaint();
 	}
+}
+
+HBRUSH CDToFDemoAppDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor) {
+	// 設定文字顏色為白色
+	pDC->SetTextColor(RGB(255, 255, 255));
+	// 設定背景顏色為黑色
+	pDC->SetBkColor(RGB(0, 0, 0));
+
+	static HBRUSH hBrushBlack = CreateSolidBrush(RGB(0, 0, 0));
+	static HBRUSH hBrushButton = CreateSolidBrush(RGB(77, 106, 169));
+
+	if (CTLCOLOR_BTN == nCtlColor) {
+		return hBrushButton;
+	}
+
+	return hBrushBlack;
 }
 
 // 視窗大小改變時，等比例調整元件大小與位置
@@ -396,8 +408,13 @@ HCURSOR CDToFDemoAppDlg::OnQueryDragIcon() {
 void CDToFDemoAppDlg::OnBnClickedPreview() {
 	const std::string dToFDeviceName = "CX3-UVC", rgbDeviceName = "USB Camera";
 	std::vector<std::string> list;
-	int deviceCount = directShowCamera->listDevices(list);
-	int i = 0;
+	int deviceCount = 0, i = 0;
+
+	deviceCount = directShowCamera->listDevices(list);
+	if (2 > deviceCount) {
+		statusMsg = "Disconnect";
+		return;
+	}
 	for (i = 0; i < deviceCount; ++i) {
 		std::string str(list.at(i));
 		m_infoListBox.InsertString(i, CString(str.c_str()));
@@ -408,11 +425,12 @@ void CDToFDemoAppDlg::OnBnClickedPreview() {
 	directShowCamera->prepareCamera();
 	directShowCamera->run();
 	int cbSize = directShowCamera->getFWVersion(fWVersion);
-	m_infoListBox.InsertString(i, CString(fWVersion));
+	m_infoListBox.InsertString(i++, CString(fWVersion));
 	/*directShowCamera[1].openCamera(rgbDeviceName);
 	directShowCamera[1].prepareCamera();
 	directShowCamera[1].run();*/
 	MSG msg;
+	statusMsg = "Connect";
 	while (directShowCamera->isPreview) {
 		if (GetMessage(&msg, nullptr, 0, 0) > 0) {
 			if (msg.message == WM_KEYDOWN && msg.wParam == VK_RETURN) {
@@ -427,6 +445,7 @@ void CDToFDemoAppDlg::OnBnClickedPreview() {
 		else {
 			// 如果 GetMessage 返回 0，表示收到 WM_QUIT
 			directShowCamera->isPreview = false;
+			statusMsg = "Disconnect";
 			//directShowCamera[1].isPreview = false;
 		}
 	}
@@ -484,7 +503,7 @@ void CDToFDemoAppDlg::OnBnClickedSpeedUp() {
 	}
 }
 
-void CDToFDemoAppDlg::OnStnClickedTransfer() {
+void CDToFDemoAppDlg::OnBtnClickedTransfer() {
 	CString inputText, inText;
 
 	m_RegEditControl.GetWindowTextW(inputText);
@@ -495,6 +514,10 @@ void CDToFDemoAppDlg::OnStnClickedTransfer() {
 		uint8_t data = (uint8_t)wcstol(inText, &endPtr, 16);
 		directShowCamera->sendCx3Command(reg, data);
 	}
+}
+
+void CDToFDemoAppDlg::OnBtnClickedSaveSD() {
+	directShowCamera->saveStandardDeviation();
 }
 
 BOOL CDToFDemoAppDlg::TrayMessage(DWORD dwMessage) {
@@ -526,7 +549,8 @@ void CDToFDemoAppDlg::OnTimer(UINT_PTR nIDEvent) {
 
 			CString str;
 			int listSize = m_infoListBox.GetCount();
-			str.Format(_T("FPS: %.2f, RMSE: %.3f"), m_fps, m_RMSE);
+			CString cstrStatus(CA2T(statusMsg.c_str()));
+			str.Format(_T("FPS: %.2f, RMSE: %.3f, %s"), m_fps, m_RMSE, cstrStatus);
 			if (0 != listSize) {
 				m_infoListBox.DeleteString(listSize - 1);
 				m_infoListBox.InsertString(listSize - 1, str);
@@ -721,4 +745,35 @@ void CDToFDemoAppDlg::MoveMouseTo(int x, int y) {
 
 double CDToFDemoAppDlg::GetRMSE() {
 	return directShowCamera->getRMSE();
+}
+
+void CDToFDemoAppDlg::AdjustControlsForDPI() {
+	HDC hdc = ::GetDC(NULL);
+	int dpiX = GetDeviceCaps(hdc, LOGPIXELSX);
+	int dpiY = GetDeviceCaps(hdc, LOGPIXELSY);
+	::ReleaseDC(NULL, hdc);
+
+	double scaleX = dpiX / m_uOriginalDpi;
+	double scaleY = dpiY / m_uOriginalDpi;
+
+	if (1.0 == scaleX && 1.0 == scaleY)
+		return;
+	
+	for (const auto& [id, initRect] : m_controls) {
+		HWND hCtrl = ::GetDlgItem(m_hWnd, id);
+		if (hCtrl) {
+			RECT rect;
+			::GetWindowRect(hCtrl, &rect);
+			::ScreenToClient(m_hWnd, (LPPOINT)&rect.left);
+			::ScreenToClient(m_hWnd, (LPPOINT)&rect.right);
+
+			int newLeft = int(rect.left * scaleX);
+			int newTop = int(rect.top * scaleY);
+			int newWidth = int((rect.right * scaleX) - (rect.left * scaleX));
+			int newHeight = int((rect.bottom * scaleY) - (rect.top * scaleY));
+
+			::SetWindowPos(hCtrl, NULL, newLeft, newTop, newWidth, newHeight, SWP_NOZORDER | SWP_NOACTIVATE);
+		}
+	}
+
 }

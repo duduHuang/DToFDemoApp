@@ -24,6 +24,7 @@ public:
 // 覆寫
 public:
 	virtual BOOL InitInstance();
+	virtual int ExitInstance();
 
 // 程式碼實作
 

@@ -227,6 +227,7 @@
   <ItemGroup>
     <Image Include="res\DToFDemoApp.ico" />
     <Image Include="res\icon1.ico" />
+    <Image Include="res\title.ico" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="app.manifest" />

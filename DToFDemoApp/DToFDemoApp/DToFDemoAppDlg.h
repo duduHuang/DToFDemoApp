@@ -34,6 +34,7 @@ protected:
 	afx_msg void OnDestroy();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
+	virtual HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg LRESULT OnDpiChanged(WPARAM wParam, LPARAM lParam);
 	afx_msg HCURSOR OnQueryDragIcon();
@@ -46,7 +47,8 @@ public:
 	afx_msg void OnBnClickedSetMaxValue();
 	afx_msg void OnBnClickedSetPointXY();
 	afx_msg void OnBnClickedSpeedUp();
-	afx_msg void OnStnClickedTransfer();
+	afx_msg void OnBtnClickedTransfer();
+	afx_msg void OnBtnClickedSaveSD();
 
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
@@ -73,6 +75,7 @@ private:
 	int m_frameCount = 0;
 	double m_fps = 0.0, m_RMSE = 0.0;
 	uint8_t fWVersion[32];
+	std::string statusMsg = "Disconnect";
 
 	void SetSubView();
 	void DisplaySubView(int width, int height);
@@ -81,4 +84,5 @@ private:
 	void MoveMouseTo(int x, int y);
 	void ReLayoutUI(UINT newDpi);
 	double GetRMSE();
+	void AdjustControlsForDPI();
 };

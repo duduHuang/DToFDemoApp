@@ -9,6 +9,8 @@
 #define IDP_SOCKETS_INIT_FAILED         103
 #define IDR_MAINFRAME                   128
 #define IDI_16ICON                      131
+#define IDI_ICON1                       140
+#define IDB_PNG1                        141
 #define IDC_PIC                         1000
 #define IDC_PIC1                        1001
 #define IDC_PIC2                        1002
@@ -35,14 +37,15 @@
 #define IDC_TRANSFERBTN                 1026
 #define IDC_FILE_COUNT_TEXT             1027
 #define IDC_FILTER_TEXT                 1028
+#define IDC_SDBTN                       1029
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        132
+#define _APS_NEXT_RESOURCE_VALUE        142
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1022
+#define _APS_NEXT_CONTROL_VALUE         1031
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

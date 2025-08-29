@@ -51,6 +51,7 @@ public:
 	void sendCx3Command(uint16_t reg, uint8_t data);
 	ULONG getFWVersion(uint8_t* data);
 	double getRMSE();
+	void saveStandardDeviation();
 
 	volatile bool isPreview;
 

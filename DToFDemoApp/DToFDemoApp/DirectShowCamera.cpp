@@ -185,6 +185,50 @@ double DirectShowCamera::getRMSE() {
 	return rMSE;
 }
 
+void DirectShowCamera::saveStandardDeviation() {
+	char fileName[MAX_PATH];
+	mglGraph gr(0, subViewWidth, subViewHeight);
+	mglData zColor = mglData(DP_NUMBER);
+	for (int i = 0; i < DP_NUMBER; i++) {
+		if (z.a[i] > 10 || z.a[i] < -10) {
+			zColor.a[i] = 1;  // 紅色
+		}
+		else {
+			zColor.a[i] = 0.3;  // 灰色
+		}
+	}
+	gr.ClearFrame();
+	gr.Dots(x, y, z, zColor);
+	gr.Box();
+	gr.Axis();
+	CComPtr<IFileDialog> pFolderDialog;
+	hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pFolderDialog));
+	if (SUCCEEDED(hr)) {
+		DWORD options;
+		pFolderDialog->GetOptions(&options);
+		pFolderDialog->SetOptions(options | FOS_PICKFOLDERS); // 啟用資料夾選擇模式
+
+		hr = pFolderDialog->Show(nullptr);
+		if (SUCCEEDED(hr)) {
+			CComPtr<IShellItem> pItem;
+			hr = pFolderDialog->GetResult(&pItem);
+			if (SUCCEEDED(hr)) {
+				PWSTR pszFilePath = nullptr;
+				hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+				if (SUCCEEDED(hr)) {
+					CString folderPath(pszFilePath);
+					AfxMessageBox(_T("選擇的資料夾是：") + folderPath);
+					sprintf(fileName, folderPath + "\\standard deviation.png");
+					gr.WritePNG(fileName);
+
+					outFile << "write standard deviation file, file path:" << folderPath << std::endl;
+					CoTaskMemFree(pszFilePath);
+				}
+			}
+		}
+	}
+}
+
 void DirectShowCamera::ShowCameraData() {
 	while (isPreview) {
 		if (grabberCallback.getIsFull()) {
@@ -351,12 +395,9 @@ void DirectShowCamera::Cloud2D(int width, int height, uchar* pic) {
 	gr.ClearFrame();
 	double valz[valzSize];
 	std::ostringstream oss;
-	for (int i = 1; i <= valzSize; i++) {
-		valz[i] = gap * i;
-		oss << valz[i];
-		if (i != valzSize) {
-			oss << "\\n";  // MathGL 使用 '\n' 做換行
-		}
+	for (int i = 0; i < valzSize; i++) {
+		valz[i] = gap * (i + 1);
+		oss << valz[i] << "\\n";  // MathGL 使用 '\n' 做換行;
 	}
 	std::string valzStr = oss.str();
 
@@ -387,12 +428,9 @@ void DirectShowCamera::Filter2D(int width, int height, uchar* pic, int low_threa
 	int i = 0;
 	double valz[valzSize];
 	std::ostringstream oss;
-	for (int i = 1; i <= valzSize; i++) {
-		valz[i] = gap * i;
-		oss << valz[i];
-		if (i != valzSize) {
-			oss << "\\n";  // MathGL 使用 '\n' 做換行
-		}
+	for (int i = 0; i < valzSize; i++) {
+		valz[i] = gap * (i + 1);
+		oss << valz[i] << "\\n";  // MathGL 使用 '\n' 做換行;
 	}
 	std::string valzStr = oss.str();
 

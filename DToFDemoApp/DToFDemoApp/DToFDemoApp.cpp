@@ -4,6 +4,7 @@
 
 #include "pch.h"
 #include "framework.h"
+#include "gdiplus.h"
 #include "DToFDemoApp.h"
 #include "DToFDemoAppDlg.h"
 
@@ -11,7 +12,7 @@
 #define new DEBUG_NEW
 #endif
 
-
+ULONG_PTR g_gdiplusToken;
 // CDToFDemoAppApp
 
 BEGIN_MESSAGE_MAP(CDToFDemoAppApp, CWinApp)
@@ -40,6 +41,10 @@ CDToFDemoAppApp theApp;
 
 BOOL CDToFDemoAppApp::InitInstance()
 {
+
+	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+	GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, NULL);
+
 	//若應用程式有以下情況時，則 Windows XP 上必須要有 InitCommonControlsEx():
 	// 來啟動視覺化樣式，在 Windows XP 上，則需要 InitCommonControls()。
 	// 否則任何視窗的建立都將失敗。
@@ -115,3 +120,9 @@ BOOL CDToFDemoAppApp::InitInstance()
 	return FALSE;
 }
 
+
+int CDToFDemoAppApp::ExitInstance()
+{
+	Gdiplus::GdiplusShutdown(g_gdiplusToken);
+	return CWinApp::ExitInstance();
+}
