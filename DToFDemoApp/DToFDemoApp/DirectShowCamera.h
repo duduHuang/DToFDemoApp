@@ -51,6 +51,7 @@ public:
 	void sendCx3Command(uint16_t reg, uint8_t data);
 	ULONG getFWVersion(uint8_t* data);
 	double getRMSE();
+	int getSelectedXYDepth();
 	void saveStandardDeviation();
 
 	volatile bool isPreview;
@@ -73,5 +74,6 @@ private:
 	mglData x, y, z, pointCloudX, pointCloudY, pointCloudZ;
 	bool isSpeedUp;
 	int rotatx = 40, rotaty = 50, histIndex = -1, histW = 0, histH = 0, cloud3dW = 0, cloud3dH = 0, filterThreshold = 1000, maxValue = 2250;
+	int selectedXYDepth = 0;
 	double rMSE = 0;
 };

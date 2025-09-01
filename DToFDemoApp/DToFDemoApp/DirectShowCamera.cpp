@@ -185,19 +185,30 @@ double DirectShowCamera::getRMSE() {
 	return rMSE;
 }
 
+int DirectShowCamera::getSelectedXYDepth() {
+	return selectedXYDepth;
+}
+
 void DirectShowCamera::saveStandardDeviation() {
 	char fileName[MAX_PATH];
 	mglGraph gr(0, subViewWidth, subViewHeight);
-	mglData zColor = mglData(DP_NUMBER);
+	mglData zColor(DP_NUMBER);
+	int standardDepthValue = 0;
 	for (int i = 0; i < DP_NUMBER; i++) {
-		if (z.a[i] > 10 || z.a[i] < -10) {
-			zColor.a[i] = 1;  // 紅色
+		standardDepthValue += z.a[i];
+	}
+	standardDepthValue = standardDepthValue / DP_NUMBER;
+	for (int i = 0; i < DP_NUMBER; i++) {
+		if (abs(z.a[i] - standardDepthValue) > 10) {
+			zColor.a[i] = 1;  // white
 		}
 		else {
-			zColor.a[i] = 0.3;  // 灰色
+			zColor.a[i] = 0;  // black
 		}
 	}
 	gr.ClearFrame();
+	gr.SetPalette("kw");   // 黑-白的漸層
+	gr.SetRanges(-1, 24, -1, 24, 0 - maxValue, maxValue);
 	gr.Dots(x, y, z, zColor);
 	gr.Box();
 	gr.Axis();
@@ -262,6 +273,7 @@ void DirectShowCamera::setHistIndex(const int hist, const int width, const int h
 	histIndex = DP_NUMBER > hist ? hist : -1;
 	histW = width;
 	histH = height;
+	selectedXYDepth = DP_NUMBER > hist ? pointCloudZ[hist] : 0;
 }
 
 void DirectShowCamera::setRotate(const int x, const int y, const int width, const int height) {
