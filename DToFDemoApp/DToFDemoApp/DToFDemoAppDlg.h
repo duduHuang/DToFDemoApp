@@ -49,6 +49,7 @@ public:
 	afx_msg void OnBnClickedSpeedUp();
 	afx_msg void OnBtnClickedTransfer();
 	afx_msg void OnBtnClickedSaveSD();
+	afx_msg void OnBtnClickedSelectedPowerMode();
 
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
@@ -76,6 +77,7 @@ private:
 	double m_fps = 0.0, m_RMSE = 0.0;
 	uint8_t fWVersion[32];
 	std::string statusMsg = "Disconnect";
+	int selectedPowerMode = 0;
 
 	void SetSubView();
 	void DisplaySubView(int width, int height);

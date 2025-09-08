@@ -38,6 +38,8 @@
 #define IDC_FILE_COUNT_TEXT             1027
 #define IDC_FILTER_TEXT                 1028
 #define IDC_SDBTN                       1029
+#define IDC_SDBTN2                      1030
+#define IDC_MODEBTN                     1030
 
 // Next default values for new objects
 // 

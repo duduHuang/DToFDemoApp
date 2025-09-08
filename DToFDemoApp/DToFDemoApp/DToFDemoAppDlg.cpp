@@ -77,6 +77,7 @@ BEGIN_MESSAGE_MAP(CDToFDemoAppDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_SPEEDBTN, &CDToFDemoAppDlg::OnBnClickedSpeedUp)
 	ON_BN_CLICKED(IDC_TRANSFERBTN, &CDToFDemoAppDlg::OnBtnClickedTransfer)
 	ON_BN_CLICKED(IDC_SDBTN, &CDToFDemoAppDlg::OnBtnClickedSaveSD)
+	ON_BN_CLICKED(IDC_MODEBTN, &CDToFDemoAppDlg::OnBtnClickedSelectedPowerMode)
 
 	ON_WM_MOUSEMOVE()
 	ON_WM_SETCURSOR()
@@ -189,6 +190,10 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
 	GetDlgItem(IDC_SDBTN)->SetWindowPos(GetParent(), width * 0.8, height * 0.7, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
 
+	GetDlgItem(IDC_MODEBTN)->GetWindowRect(&rect);
+	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
+	GetDlgItem(IDC_MODEBTN)->SetWindowPos(GetParent(), width * 0.8, height * 0.65, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+
 	GetDlgItem(IDC_SLIDER1)->SetWindowPos(GetParent(), 10, height * 0.84, width * 0.8, 30, SWP_SHOWWINDOW);
 	GetDlgItem(IDC_THRESHOLDTEXT)->SetWindowPos(GetParent(), width * 0.8 + 10, height * 0.84 + 5, 30, 30, SWP_SHOWWINDOW);
 	GetDlgItem(IDC_XTEXT)->SetWindowPos(GetParent(), width * 0.92, height * 0.52 + 5, 10, 20, SWP_SHOWWINDOW);
@@ -213,7 +218,7 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	GetClientRect(m_initClientRect);
 	UINT controlIDs[] = {
 		IDC_PIC, IDC_PIC1, IDC_PIC2, IDC_PIC3,
-		IDC_SDBTN, IDC_PREBTN, IDCANCEL, IDC_EDIT1, IDC_EDIT2, IDC_EDIT3, IDC_EDIT4, IDC_EDIT5, IDC_EDIT6, IDC_EDITBTN, IDC_MAXBTN, IDC_POINTBTN,
+		IDC_SDBTN, IDC_MODEBTN, IDC_PREBTN, IDCANCEL, IDC_EDIT1, IDC_EDIT2, IDC_EDIT3, IDC_EDIT4, IDC_EDIT5, IDC_EDIT6, IDC_EDITBTN, IDC_MAXBTN, IDC_POINTBTN,
 		IDC_LIST2, IDC_SLIDER1, IDC_THRESHOLDTEXT, IDC_XTEXT, IDC_YTEXT, IDC_REGTEXT, IDC_DATATEXT, IDC_SPEEDBTN, IDC_TRANSFERBTN,
 		IDC_FILE_COUNT_TEXT, IDC_FILTER_TEXT
 	};
@@ -520,6 +525,18 @@ void CDToFDemoAppDlg::OnBtnClickedSaveSD() {
 	directShowCamera->saveStandardDeviation();
 }
 
+void CDToFDemoAppDlg::OnBtnClickedSelectedPowerMode() {
+	directShowCamera->sendCx3Command(0, selectedPowerMode);
+	if (0 == selectedPowerMode) {
+		selectedPowerMode = 1;
+		GetDlgItem(IDC_MODEBTN)->SetWindowText(_T("High power mode"));
+	}
+	else {
+		GetDlgItem(IDC_MODEBTN)->SetWindowText(_T("Low power mode"));
+		selectedPowerMode = 0;
+	}
+}
+
 BOOL CDToFDemoAppDlg::TrayMessage(DWORD dwMessage) {
 	CString sTip(_T("POLYVISION HR"));
 	NOTIFYICONDATA tnd;
@@ -547,17 +564,25 @@ void CDToFDemoAppDlg::OnTimer(UINT_PTR nIDEvent) {
 			m_fps = m_frameCount / elapsed;
 			m_RMSE = GetRMSE();
 
-			CString str;
+			CString str, str1, str2;
 			int listSize = m_infoListBox.GetCount();
 			CString cstrStatus(CA2T(statusMsg.c_str()));
 			int depthValue = directShowCamera->getSelectedXYDepth();
-			str.Format(_T("FPS: %.2f, RMSE: %.3f, %s, Depth: %d"), m_fps, m_RMSE, cstrStatus, depthValue);
+			str.Format(_T("FPS: %.2f, RMSE: %.3f"), m_fps, m_RMSE);
+			str1.Format(_T("Depth: %d"), depthValue);
+			str2.Format(_T("%s"), cstrStatus);
 			if (0 != listSize) {
-				m_infoListBox.DeleteString(listSize - 1);
-				m_infoListBox.InsertString(listSize - 1, str);
+				listSize = m_infoListBox.DeleteString(listSize - 1);
+				listSize = m_infoListBox.DeleteString(listSize - 1);
+				listSize = m_infoListBox.DeleteString(listSize - 1);
+				listSize = m_infoListBox.InsertString(listSize, str);
+				listSize = m_infoListBox.InsertString(listSize, str1);
+				listSize = m_infoListBox.InsertString(listSize, str2);
 			}
 			else {
-				m_infoListBox.InsertString(0, str);
+				listSize = m_infoListBox.InsertString(listSize, str);
+				listSize = m_infoListBox.InsertString(listSize, str1);
+				listSize = m_infoListBox.InsertString(listSize, str2);
 			}
 
 			// 重設
