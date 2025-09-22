@@ -18,8 +18,10 @@ BaseDirectShowCamera::BaseDirectShowCamera() {
 	}
 	grabberCallback.setBuffer(cameraData);
 
-	CreateDirectory(tempPath, NULL);
-	std::wstring logPath = std::wstring(tempPath) + L"log.txt";
+	GetModuleFileName(NULL, tempPath, MAX_PATH);
+	PathRemoveFileSpec(tempPath);
+	CString folderPath(tempPath);
+	std::wstring logPath = std::wstring(folderPath) + L"\\log.txt";
 	outFile.open(logPath, std::ios::out);
 }
 

@@ -11,6 +11,8 @@
 #include <ksproxy.h>
 #include <ksmedia.h>
 #include <initguid.h>
+#include <Shlwapi.h>
+#pragma comment(lib, "Shlwapi.lib")
 #include <atlbase.h> // 使用 CComPtr 管理 COM 物件
 #pragma comment(lib, "strmiids.lib")  // DirectShow library
 #pragma comment(lib, "quartz.lib")
@@ -22,7 +24,7 @@ DEFINE_GUID(CX3_XU_GUID,
 
 class BaseDirectShowCamera {
 private:
-	TCHAR tempPath[MAX_PATH] = _T("D:\\RD_NT_DToF\\");
+	TCHAR tempPath[MAX_PATH];
 
 public:
     BaseDirectShowCamera();
