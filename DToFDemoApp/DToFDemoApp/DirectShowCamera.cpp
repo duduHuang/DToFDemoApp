@@ -186,6 +186,7 @@ double DirectShowCamera::getRMSE() {
 }
 
 int DirectShowCamera::getSelectedXYDepth() {
+	setHistIndex(histIndex, histW, histH);
 	return selectedXYDepth;
 }
 

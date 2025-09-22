@@ -415,6 +415,10 @@ void CDToFDemoAppDlg::OnBnClickedPreview() {
 	std::vector<std::string> list;
 	int deviceCount = 0, i = 0;
 
+	if (statusMsg.compare("Connect")) {
+		return;
+	}
+
 	deviceCount = directShowCamera->listDevices(list);
 	if (2 > deviceCount) {
 		statusMsg = "Disconnect";
@@ -526,15 +530,14 @@ void CDToFDemoAppDlg::OnBtnClickedSaveSD() {
 }
 
 void CDToFDemoAppDlg::OnBtnClickedSelectedPowerMode() {
-	directShowCamera->sendCx3Command(0, selectedPowerMode);
 	if (0 == selectedPowerMode) {
 		selectedPowerMode = 1;
-		GetDlgItem(IDC_MODEBTN)->SetWindowText(_T("High power mode"));
-	}
-	else {
 		GetDlgItem(IDC_MODEBTN)->SetWindowText(_T("Low power mode"));
+	} else {
+		GetDlgItem(IDC_MODEBTN)->SetWindowText(_T("High power mode"));
 		selectedPowerMode = 0;
 	}
+	directShowCamera->sendCx3Command(0, selectedPowerMode);
 }
 
 BOOL CDToFDemoAppDlg::TrayMessage(DWORD dwMessage) {
