@@ -75,7 +75,8 @@ BEGIN_MESSAGE_MAP(CDToFDemoAppDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_MAXBTN, &CDToFDemoAppDlg::OnBnClickedSetMaxValue)
 	ON_BN_CLICKED(IDC_POINTBTN, &CDToFDemoAppDlg::OnBnClickedSetPointXY)
 	ON_BN_CLICKED(IDC_SPEEDBTN, &CDToFDemoAppDlg::OnBnClickedSpeedUp)
-	ON_BN_CLICKED(IDC_TRANSFERBTN, &CDToFDemoAppDlg::OnBtnClickedTransfer)
+	ON_BN_CLICKED(IDC_WRITEBTN, &CDToFDemoAppDlg::OnBtnClickedWrite)
+	ON_BN_CLICKED(IDC_READBTN, &CDToFDemoAppDlg::OnBtnClickedRead)
 	ON_BN_CLICKED(IDC_SDBTN, &CDToFDemoAppDlg::OnBtnClickedSaveSD)
 	ON_BN_CLICKED(IDC_MODEBTN, &CDToFDemoAppDlg::OnBtnClickedSelectedPowerMode)
 
@@ -205,9 +206,13 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
 	GetDlgItem(IDC_SPEEDBTN)->SetWindowPos(GetParent(), width * 0.92, height * 0.45, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
 
-	GetDlgItem(IDC_TRANSFERBTN)->GetWindowRect(&rect);
+	GetDlgItem(IDC_WRITEBTN)->GetWindowRect(&rect);
 	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
-	GetDlgItem(IDC_TRANSFERBTN)->SetWindowPos(GetParent(), width * 0.92, height * 0.4, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+	GetDlgItem(IDC_WRITEBTN)->SetWindowPos(GetParent(), width * 0.92, height * 0.4, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+
+	GetDlgItem(IDC_READBTN)->GetWindowRect(&rect);
+	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
+	GetDlgItem(IDC_READBTN)->SetWindowPos(GetParent(), width * 0.85, height * 0.4, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
 
 	m_sliderThreshold.SetRange(0, 7500);
 	m_sliderThreshold.SetTicFreq(500);
@@ -219,7 +224,7 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	UINT controlIDs[] = {
 		IDC_PIC, IDC_PIC1, IDC_PIC2, IDC_PIC3,
 		IDC_SDBTN, IDC_MODEBTN, IDC_PREBTN, IDCANCEL, IDC_EDIT1, IDC_EDIT2, IDC_EDIT3, IDC_EDIT4, IDC_EDIT5, IDC_EDIT6, IDC_EDITBTN, IDC_MAXBTN, IDC_POINTBTN,
-		IDC_LIST2, IDC_SLIDER1, IDC_THRESHOLDTEXT, IDC_XTEXT, IDC_YTEXT, IDC_REGTEXT, IDC_DATATEXT, IDC_SPEEDBTN, IDC_TRANSFERBTN,
+		IDC_LIST2, IDC_SLIDER1, IDC_THRESHOLDTEXT, IDC_XTEXT, IDC_YTEXT, IDC_REGTEXT, IDC_DATATEXT, IDC_SPEEDBTN, IDC_WRITEBTN, IDC_READBTN,
 		IDC_FILE_COUNT_TEXT, IDC_FILTER_TEXT
 	};
 	for (UINT id : controlIDs) {
@@ -415,7 +420,7 @@ void CDToFDemoAppDlg::OnBnClickedPreview() {
 	std::vector<std::string> list;
 	int deviceCount = 0, i = 0;
 
-	if (statusMsg.compare("Connect")) {
+	if (!statusMsg.compare("Connect")) {
 		return;
 	}
 
@@ -512,7 +517,7 @@ void CDToFDemoAppDlg::OnBnClickedSpeedUp() {
 	}
 }
 
-void CDToFDemoAppDlg::OnBtnClickedTransfer() {
+void CDToFDemoAppDlg::SendCommand2CX3(ULONG propertyId, ULONG flag) {
 	CString inputText, inText;
 
 	m_RegEditControl.GetWindowTextW(inputText);
@@ -521,8 +526,22 @@ void CDToFDemoAppDlg::OnBtnClickedTransfer() {
 		wchar_t* endPtr = nullptr;
 		uint16_t reg = (uint16_t)wcstol(inputText, &endPtr, 16);
 		uint8_t data = (uint8_t)wcstol(inText, &endPtr, 16);
-		directShowCamera->sendCx3Command(reg, data);
+		if (0x01 == propertyId) {
+			directShowCamera->sendCx3Command(propertyId, flag, reg, &dataFromReg);
+		} else {
+			directShowCamera->sendCx3Command(propertyId, flag, reg, &data);
+		}
 	}
+}
+
+void CDToFDemoAppDlg::OnBtnClickedWrite() {
+	SendCommand2CX3(0x03, KSPROPERTY_TYPE_SET);
+}
+
+void CDToFDemoAppDlg::OnBtnClickedRead() {
+	dataFromReg = 0;
+	SendCommand2CX3(0x01, KSPROPERTY_TYPE_SET);
+	SendCommand2CX3(0x01, KSPROPERTY_TYPE_GET);
 }
 
 void CDToFDemoAppDlg::OnBtnClickedSaveSD() {
@@ -537,7 +556,7 @@ void CDToFDemoAppDlg::OnBtnClickedSelectedPowerMode() {
 		GetDlgItem(IDC_MODEBTN)->SetWindowText(_T("High power mode"));
 		selectedPowerMode = 0;
 	}
-	directShowCamera->sendCx3Command(0, selectedPowerMode);
+	directShowCamera->sendCx3Command(0x03, KSPROPERTY_TYPE_SET, 0, &selectedPowerMode);
 }
 
 BOOL CDToFDemoAppDlg::TrayMessage(DWORD dwMessage) {
@@ -573,19 +592,22 @@ void CDToFDemoAppDlg::OnTimer(UINT_PTR nIDEvent) {
 			int depthValue = directShowCamera->getSelectedXYDepth();
 			str.Format(_T("FPS: %.2f, RMSE: %.3f"), m_fps, m_RMSE);
 			str1.Format(_T("Depth: %d"), depthValue);
-			str2.Format(_T("%s"), cstrStatus);
+			str2.Format(_T("Data from register: 0x%d"), dataFromReg);
 			if (0 != listSize) {
+				listSize = m_infoListBox.DeleteString(listSize - 1);
 				listSize = m_infoListBox.DeleteString(listSize - 1);
 				listSize = m_infoListBox.DeleteString(listSize - 1);
 				listSize = m_infoListBox.DeleteString(listSize - 1);
 				listSize = m_infoListBox.InsertString(listSize, str);
 				listSize = m_infoListBox.InsertString(listSize, str1);
 				listSize = m_infoListBox.InsertString(listSize, str2);
+				listSize = m_infoListBox.InsertString(listSize, cstrStatus);
 			}
 			else {
 				listSize = m_infoListBox.InsertString(listSize, str);
 				listSize = m_infoListBox.InsertString(listSize, str1);
 				listSize = m_infoListBox.InsertString(listSize, str2);
+				listSize = m_infoListBox.InsertString(listSize, cstrStatus);
 			}
 
 			// 重設

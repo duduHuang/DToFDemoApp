@@ -48,7 +48,7 @@ public:
 	void writeFile(const int fileCount);
 	void setSpeedUp();
 	void setDefaultSpeed();
-	void sendCx3Command(uint16_t reg, uint8_t data);
+	void sendCx3Command(ULONG propertyId, ULONG flag, uint16_t reg, uint8_t* data);
 	ULONG getFWVersion(uint8_t* data);
 	double getRMSE();
 	int getSelectedXYDepth();

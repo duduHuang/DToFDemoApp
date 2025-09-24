@@ -47,7 +47,8 @@ public:
 	afx_msg void OnBnClickedSetMaxValue();
 	afx_msg void OnBnClickedSetPointXY();
 	afx_msg void OnBnClickedSpeedUp();
-	afx_msg void OnBtnClickedTransfer();
+	afx_msg void OnBtnClickedWrite();
+	afx_msg void OnBtnClickedRead();
 	afx_msg void OnBtnClickedSaveSD();
 	afx_msg void OnBtnClickedSelectedPowerMode();
 
@@ -76,8 +77,9 @@ private:
 	int m_frameCount = 0;
 	double m_fps = 0.0, m_RMSE = 0.0;
 	uint8_t fWVersion[32];
+	uint8_t dataFromReg = 0;
 	std::string statusMsg = "Disconnect";
-	int selectedPowerMode = 0;
+	uint8_t selectedPowerMode = 0;
 
 	void SetSubView();
 	void DisplaySubView(int width, int height);
@@ -87,4 +89,5 @@ private:
 	void ReLayoutUI(UINT newDpi);
 	double GetRMSE();
 	void AdjustControlsForDPI();
+	void SendCommand2CX3(ULONG PropertyId, ULONG flag);
 };

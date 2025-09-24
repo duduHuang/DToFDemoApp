@@ -35,11 +35,13 @@
 #define IDC_EDIT6                       1024
 #define IDC_DATATEXT                    1025
 #define IDC_TRANSFERBTN                 1026
+#define IDC_WRITEBTN                    1026
 #define IDC_FILE_COUNT_TEXT             1027
 #define IDC_FILTER_TEXT                 1028
 #define IDC_SDBTN                       1029
-#define IDC_SDBTN2                      1030
 #define IDC_MODEBTN                     1030
+#define IDC_TRANSFERBTN2                1031
+#define IDC_READBTN                     1031
 
 // Next default values for new objects
 // 

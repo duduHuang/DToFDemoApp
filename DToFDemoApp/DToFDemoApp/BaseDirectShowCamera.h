@@ -35,7 +35,7 @@ public:
 	virtual void run();
 	virtual void stop();
 	virtual void ShowCameraData();
-	virtual void sendCx3Command(uint16_t reg, uint8_t data);
+	virtual void sendCx3Command(ULONG propertyId, ULONG flag, uint16_t reg, uint8_t* data);
 	virtual ULONG getFWVersion(uint8_t* data);
 
 protected:

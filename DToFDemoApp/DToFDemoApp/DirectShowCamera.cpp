@@ -627,8 +627,8 @@ void DirectShowCamera::setDefaultSpeed() {
 	isSpeedUp = false;
 }
 
-void DirectShowCamera::sendCx3Command(uint16_t reg, uint8_t data) {
-	BaseDirectShowCamera::sendCx3Command(reg, data);
+void DirectShowCamera::sendCx3Command(ULONG propertyId, ULONG flag, uint16_t reg, uint8_t* data) {
+	BaseDirectShowCamera::sendCx3Command(propertyId, flag, reg, data);
 }
 
 ULONG DirectShowCamera::getFWVersion(uint8_t* data) {

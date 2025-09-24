@@ -320,17 +320,16 @@ void BaseDirectShowCamera::ShowCameraData()
 {
 }
 
-void BaseDirectShowCamera::sendCx3Command(uint16_t reg, uint8_t data) {
+void BaseDirectShowCamera::sendCx3Command(ULONG propertyId, ULONG flag, uint16_t reg, uint8_t* data) {
 	ULONG cbReturned = 0;
 	KSP_NODE ksNode = {};
 	ksNode.Property.Set = CX3_XU_GUID;
-	ksNode.Property.Id = 0x03; // 對應 CX3 的控制 ID，例如 wValue
-	ksNode.Property.Flags = KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_TOPOLOGY;
+	ksNode.Property.Id = propertyId;        // set data 0x03, get data 0x05 // 對應 CX3 的控制 ID，例如 wValue
+	ksNode.Property.Flags = flag | KSPROPERTY_TYPE_TOPOLOGY;
 	ksNode.NodeId = 2;         // XU 的 Node ID（參考 UVC Descriptor）
 	ksNode.Reserved = 0;
-
 	// 傳送的 payload，根據韌體定義
-	UCHAR buffer[6] = { 0x00, 0x00, reg & 0xFF, (reg >> 8) & 0xFF, data & 0xFF, 0x00}; // 寫入Sensor寄存器範例
+	UCHAR buffer[6] = { 0x00, 0x00, reg & 0xFF, (reg >> 8) & 0xFF, data[0] & 0xFF, 0x00}; // 寫入Sensor寄存器範例
 
 	hr = pKsControl->KsProperty(
 		(PKSPROPERTY) & ksNode,
@@ -342,7 +341,13 @@ void BaseDirectShowCamera::sendCx3Command(uint16_t reg, uint8_t data) {
 	if (FAILED(hr)) {
 		outFile << "sendCx3Command: KsProperty Failed: " << std::hex << hr << std::endl;
 	} else {
-		outFile << "sendCx3Command: Success. Bytes returned: " << cbReturned << std::endl;
+		outFile << "If the property ID is 0x03, it means set data; if it is 0x01, it means get data." << std::endl;
+		outFile << "sendCx3Command: Success. Rroperty Id: 0x" << propertyId << " Bytes returned : " << cbReturned << std::endl;
+		if (0x01 == propertyId) {
+			*data = buffer[0];
+			//std::string str((const char*)data);
+			outFile << "Read (reg, data): (" << reg << ", " << *data << ")" << std::endl;
+		}
 	}
 }
 
