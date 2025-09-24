@@ -592,7 +592,7 @@ void CDToFDemoAppDlg::OnTimer(UINT_PTR nIDEvent) {
 			int depthValue = directShowCamera->getSelectedXYDepth();
 			str.Format(_T("FPS: %.2f, RMSE: %.3f"), m_fps, m_RMSE);
 			str1.Format(_T("Depth: %d"), depthValue);
-			str2.Format(_T("Data from register: 0x%d"), dataFromReg);
+			str2.Format(_T("Data from register: 0x%02X"), dataFromReg);
 			if (0 != listSize) {
 				listSize = m_infoListBox.DeleteString(listSize - 1);
 				listSize = m_infoListBox.DeleteString(listSize - 1);
