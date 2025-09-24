@@ -345,8 +345,9 @@ void BaseDirectShowCamera::sendCx3Command(ULONG propertyId, ULONG flag, uint16_t
 		outFile << "sendCx3Command: Success. Rroperty Id: 0x" << propertyId << " Bytes returned : " << cbReturned << std::endl;
 		if (0x01 == propertyId) {
 			*data = buffer[0];
-			//std::string str((const char*)data);
-			outFile << "Read (reg, data): (" << reg << ", " << *data << ")" << std::endl;
+			outFile << "Read (reg, data): (" << (int)reg << ", " << (int)*data << ")" << std::endl;
+		} else if (*data == buffer[0]) {
+			outFile << "Write data: " << (int)*data << "  ,buffer " << (int)buffer[0] << std::endl;
 		}
 	}
 }

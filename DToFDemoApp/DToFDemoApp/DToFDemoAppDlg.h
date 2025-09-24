@@ -89,5 +89,5 @@ private:
 	void ReLayoutUI(UINT newDpi);
 	double GetRMSE();
 	void AdjustControlsForDPI();
-	void SendCommand2CX3(ULONG PropertyId, ULONG flag);
+	void SendCommand2CX3(ULONG PropertyId);
 };

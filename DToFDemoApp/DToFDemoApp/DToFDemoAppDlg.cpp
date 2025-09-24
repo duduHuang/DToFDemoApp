@@ -517,7 +517,7 @@ void CDToFDemoAppDlg::OnBnClickedSpeedUp() {
 	}
 }
 
-void CDToFDemoAppDlg::SendCommand2CX3(ULONG propertyId, ULONG flag) {
+void CDToFDemoAppDlg::SendCommand2CX3(ULONG propertyId) {
 	CString inputText, inText;
 
 	m_RegEditControl.GetWindowTextW(inputText);
@@ -526,22 +526,20 @@ void CDToFDemoAppDlg::SendCommand2CX3(ULONG propertyId, ULONG flag) {
 		wchar_t* endPtr = nullptr;
 		uint16_t reg = (uint16_t)wcstol(inputText, &endPtr, 16);
 		uint8_t data = (uint8_t)wcstol(inText, &endPtr, 16);
+		directShowCamera->sendCx3Command(propertyId, KSPROPERTY_TYPE_SET, reg, &data);
 		if (0x01 == propertyId) {
-			directShowCamera->sendCx3Command(propertyId, flag, reg, &dataFromReg);
-		} else {
-			directShowCamera->sendCx3Command(propertyId, flag, reg, &data);
+			directShowCamera->sendCx3Command(propertyId, KSPROPERTY_TYPE_GET, reg, &dataFromReg);
 		}
 	}
 }
 
 void CDToFDemoAppDlg::OnBtnClickedWrite() {
-	SendCommand2CX3(0x03, KSPROPERTY_TYPE_SET);
+	SendCommand2CX3(0x03);
 }
 
 void CDToFDemoAppDlg::OnBtnClickedRead() {
 	dataFromReg = 0;
-	SendCommand2CX3(0x01, KSPROPERTY_TYPE_SET);
-	SendCommand2CX3(0x01, KSPROPERTY_TYPE_GET);
+	SendCommand2CX3(0x01);
 }
 
 void CDToFDemoAppDlg::OnBtnClickedSaveSD() {
