@@ -64,7 +64,7 @@ private:
 	UINT m_uOriginalDpi = 96; // 初始 DPI (預設 96)
 	CListBox m_infoListBox;
 	CSliderCtrl m_sliderThreshold;
-	CEdit m_editControl, m_maxEditControl, m_pointXEditControl, m_pointYEditControl, m_RegEditControl, m_DataEditControl;
+	CEdit m_editControl, m_maxEditControl, m_pointXEditControl, m_pointYEditControl, m_RegEditControl, m_DataEditControl, m_RegInfoEditControl;
 	CStatic m_thresholdText;
 	HCURSOR defaultCursor;
 	int startX = 0, startY = 0, rotatX = 40, rotatY = 50;

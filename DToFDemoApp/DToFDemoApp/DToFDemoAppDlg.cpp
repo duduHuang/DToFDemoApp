@@ -58,6 +58,7 @@ void CDToFDemoAppDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT4, m_pointYEditControl);
 	DDX_Control(pDX, IDC_EDIT5, m_DataEditControl);
 	DDX_Control(pDX, IDC_EDIT6, m_RegEditControl);
+	DDX_Control(pDX, IDC_EDIT7, m_RegInfoEditControl);
 	DDX_Control(pDX, IDC_LIST2, m_infoListBox); // 綁定控件變數
 	DDX_Control(pDX, IDC_SLIDER1, m_sliderThreshold);
 	DDX_Control(pDX, IDC_THRESHOLDTEXT, m_thresholdText);
@@ -163,6 +164,10 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
 	GetDlgItem(IDC_EDIT5)->SetWindowPos(GetParent(), width * 0.92, height * 0.3, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
 
+	GetDlgItem(IDC_EDIT7)->GetWindowRect(&rect);
+	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
+	GetDlgItem(IDC_EDIT7)->SetWindowPos(GetParent(), width * 0.92, height * 0.38, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+
 	GetDlgItem(IDC_EDIT6)->GetWindowRect(&rect);
 	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
 	GetDlgItem(IDC_EDIT6)->SetWindowPos(GetParent(), width * 0.92, height * 0.2, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
@@ -189,11 +194,11 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 
 	GetDlgItem(IDC_SDBTN)->GetWindowRect(&rect);
 	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
-	GetDlgItem(IDC_SDBTN)->SetWindowPos(GetParent(), width * 0.8, height * 0.7, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+	GetDlgItem(IDC_SDBTN)->SetWindowPos(GetParent(), width * 0.78, height * 0.7, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
 
 	GetDlgItem(IDC_MODEBTN)->GetWindowRect(&rect);
 	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
-	GetDlgItem(IDC_MODEBTN)->SetWindowPos(GetParent(), width * 0.8, height * 0.65, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+	GetDlgItem(IDC_MODEBTN)->SetWindowPos(GetParent(), width * 0.8, height * 0.63, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
 
 	GetDlgItem(IDC_SLIDER1)->SetWindowPos(GetParent(), 10, height * 0.84, width * 0.8, 30, SWP_SHOWWINDOW);
 	GetDlgItem(IDC_THRESHOLDTEXT)->SetWindowPos(GetParent(), width * 0.8 + 10, height * 0.84 + 5, 30, 30, SWP_SHOWWINDOW);
@@ -208,11 +213,11 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 
 	GetDlgItem(IDC_WRITEBTN)->GetWindowRect(&rect);
 	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
-	GetDlgItem(IDC_WRITEBTN)->SetWindowPos(GetParent(), width * 0.92, height * 0.4, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+	GetDlgItem(IDC_WRITEBTN)->SetWindowPos(GetParent(), width * 0.83, height * 0.3, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
 
 	GetDlgItem(IDC_READBTN)->GetWindowRect(&rect);
 	ScreenToClient(&rect); // 把螢幕座標轉換為父視窗的座標
-	GetDlgItem(IDC_READBTN)->SetWindowPos(GetParent(), width * 0.85, height * 0.4, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
+	GetDlgItem(IDC_READBTN)->SetWindowPos(GetParent(), width * 0.83, height * 0.38, rect.Width(), rect.Height(), SWP_SHOWWINDOW);
 
 	m_sliderThreshold.SetRange(0, 7500);
 	m_sliderThreshold.SetTicFreq(500);
@@ -223,7 +228,7 @@ BOOL CDToFDemoAppDlg::OnInitDialog()
 	GetClientRect(m_initClientRect);
 	UINT controlIDs[] = {
 		IDC_PIC, IDC_PIC1, IDC_PIC2, IDC_PIC3,
-		IDC_SDBTN, IDC_MODEBTN, IDC_PREBTN, IDCANCEL, IDC_EDIT1, IDC_EDIT2, IDC_EDIT3, IDC_EDIT4, IDC_EDIT5, IDC_EDIT6, IDC_EDITBTN, IDC_MAXBTN, IDC_POINTBTN,
+		IDC_SDBTN, IDC_MODEBTN, IDC_PREBTN, IDCANCEL, IDC_EDIT1, IDC_EDIT2, IDC_EDIT3, IDC_EDIT4, IDC_EDIT5, IDC_EDIT7, IDC_EDIT6, IDC_EDITBTN, IDC_MAXBTN, IDC_POINTBTN,
 		IDC_LIST2, IDC_SLIDER1, IDC_THRESHOLDTEXT, IDC_XTEXT, IDC_YTEXT, IDC_REGTEXT, IDC_DATATEXT, IDC_SPEEDBTN, IDC_WRITEBTN, IDC_READBTN,
 		IDC_FILE_COUNT_TEXT, IDC_FILTER_TEXT
 	};
@@ -498,7 +503,7 @@ void CDToFDemoAppDlg::OnBnClickedSetPointXY() {
 	m_pointYEditControl.GetWindowTextW(inputTextY);
 	int x = (!inputTextX.IsEmpty()) ? _ttoi(inputTextX) : -1;
 	int y = (!inputTextY.IsEmpty()) ? _ttoi(inputTextY) : -1;
-	int index = (0 < x && 0 < y) ? index = x + y * 24 : -1;
+	int index = (0 < x && 0 < y) ? index = (x + (y * 24)) : -1;
 	GetDlgItem(IDC_PIC1)->GetWindowRect(&m_rect);
 	directShowCamera->setHistIndex(index, m_rect.right - m_rect.left, m_rect.bottom - m_rect.top);
 }
@@ -519,13 +524,15 @@ void CDToFDemoAppDlg::OnBnClickedSpeedUp() {
 
 void CDToFDemoAppDlg::SendCommand2CX3(ULONG propertyId) {
 	CString inputText, inText;
-
 	m_RegEditControl.GetWindowTextW(inputText);
 	m_DataEditControl.GetWindowTextW(inText);
-	if (!inputText.IsEmpty() && !inText.IsEmpty()) {
+	if (!inputText.IsEmpty()) {
 		wchar_t* endPtr = nullptr;
 		uint16_t reg = (uint16_t)wcstol(inputText, &endPtr, 16);
-		uint8_t data = (uint8_t)wcstol(inText, &endPtr, 16);
+		uint8_t data = 0;
+		if (0x03 == propertyId && !inText.IsEmpty()) {
+			data = (uint8_t)wcstol(inText, &endPtr, 16);
+		}
 		directShowCamera->sendCx3Command(propertyId, KSPROPERTY_TYPE_SET, reg, &data);
 		if (0x01 == propertyId) {
 			directShowCamera->sendCx3Command(propertyId, KSPROPERTY_TYPE_GET, reg, &dataFromReg);
@@ -540,6 +547,9 @@ void CDToFDemoAppDlg::OnBtnClickedWrite() {
 void CDToFDemoAppDlg::OnBtnClickedRead() {
 	dataFromReg = 0;
 	SendCommand2CX3(0x01);
+	CString txt;
+	txt.Format(_T("0x%02X"), dataFromReg);
+	m_RegInfoEditControl.SetWindowTextW(txt);
 }
 
 void CDToFDemoAppDlg::OnBtnClickedSaveSD() {
@@ -584,27 +594,23 @@ void CDToFDemoAppDlg::OnTimer(UINT_PTR nIDEvent) {
 			m_fps = m_frameCount / elapsed;
 			m_RMSE = GetRMSE();
 
-			CString str, str1, str2;
+			CString str, str1;
 			int listSize = m_infoListBox.GetCount();
 			CString cstrStatus(CA2T(statusMsg.c_str()));
 			int depthValue = directShowCamera->getSelectedXYDepth();
 			str.Format(_T("FPS: %.2f, RMSE: %.3f"), m_fps, m_RMSE);
 			str1.Format(_T("Depth: %d"), depthValue);
-			str2.Format(_T("Data from register: 0x%02X"), dataFromReg);
 			if (0 != listSize) {
-				listSize = m_infoListBox.DeleteString(listSize - 1);
 				listSize = m_infoListBox.DeleteString(listSize - 1);
 				listSize = m_infoListBox.DeleteString(listSize - 1);
 				listSize = m_infoListBox.DeleteString(listSize - 1);
 				listSize = m_infoListBox.InsertString(listSize, str);
 				listSize = m_infoListBox.InsertString(listSize, str1);
-				listSize = m_infoListBox.InsertString(listSize, str2);
 				listSize = m_infoListBox.InsertString(listSize, cstrStatus);
 			}
 			else {
 				listSize = m_infoListBox.InsertString(listSize, str);
 				listSize = m_infoListBox.InsertString(listSize, str1);
-				listSize = m_infoListBox.InsertString(listSize, str2);
 				listSize = m_infoListBox.InsertString(listSize, cstrStatus);
 			}
 

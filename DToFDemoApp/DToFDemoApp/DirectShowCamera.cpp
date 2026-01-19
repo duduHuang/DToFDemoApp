@@ -251,9 +251,9 @@ void DirectShowCamera::ShowCameraData() {
 					z.a[cnt] = newarray[cnt];
 					x.a[cnt] = i;
 					y.a[cnt] = j;
-					pointCloudX.a[i * SPOT_NUMBER + j] = pointCloud[i * SPOT_NUMBER + j][0];
-					pointCloudY.a[i * SPOT_NUMBER + j] = pointCloud[i * SPOT_NUMBER + j][1];
-					pointCloudZ.a[i * SPOT_NUMBER + j] = pointCloud[i * SPOT_NUMBER + j][2];
+					pointCloudX.a[i + SPOT_NUMBER * j] = pointCloud[i + SPOT_NUMBER * j][0];
+					pointCloudY.a[i + SPOT_NUMBER * j] = pointCloud[i + SPOT_NUMBER * j][1];
+					pointCloudZ.a[i + SPOT_NUMBER * j] = pointCloud[i + SPOT_NUMBER * j][2];
 					cnt++;
 				}
 			}

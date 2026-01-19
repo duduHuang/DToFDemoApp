@@ -19,6 +19,7 @@
 #define IDC_EDIT1                       1005
 #define IDC_EDITBTN                     1006
 #define IDC_LIST2                       1008
+#define IDC_LIST3                       1009
 #define IDC_SLIDER1                     1011
 #define IDC_EDIT2                       1013
 #define IDC_MAXBTN                      1014
@@ -40,8 +41,8 @@
 #define IDC_FILTER_TEXT                 1028
 #define IDC_SDBTN                       1029
 #define IDC_MODEBTN                     1030
-#define IDC_TRANSFERBTN2                1031
 #define IDC_READBTN                     1031
+#define IDC_EDIT7                       1032
 
 // Next default values for new objects
 // 
